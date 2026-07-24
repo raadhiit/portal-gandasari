@@ -24,3 +24,4 @@ yarn-error.log
 /.zed
 AGENTS.MD
 /docs/
+.agents
