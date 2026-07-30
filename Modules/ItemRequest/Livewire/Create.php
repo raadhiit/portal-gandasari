@@ -19,15 +19,11 @@ class Create extends Component
 
     public string $businessUnitId = '';
 
-    public string $unitId = '';
-
-    public string $warehouseId = '';
-
     public string $notes = '';
 
-    /** @var array<int, array{item_name: string, item_type: string}> */
+    /** @var array<int, array{item_name: string, item_type: string, unit_id: string}> */
     public array $items = [
-        ['item_name' => '', 'item_type' => ''],
+        ['item_name' => '', 'item_type' => '', 'unit_id' => ''],
     ];
 
     public function mount(): void
@@ -37,7 +33,7 @@ class Create extends Component
 
     public function addItem(): void
     {
-        $this->items[] = ['item_name' => '', 'item_type' => ''];
+        $this->items[] = ['item_name' => '', 'item_type' => '', 'unit_id' => ''];
     }
 
     public function removeItem(int $index): void
@@ -54,12 +50,11 @@ class Create extends Component
     {
         $validated = $this->validate([
             'businessUnitId' => ['required', 'integer', 'exists:business_units,id'],
-            'unitId' => ['required', 'integer', 'exists:units,id'],
-            'warehouseId' => ['required', 'integer', 'exists:warehouses,id'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.item_name' => ['required', 'string', 'max:150'],
             'items.*.item_type' => ['required', 'string', 'max:100'],
+            'items.*.unit_id' => ['required', 'integer', 'exists:units,id'],
         ]);
 
         /** @var User $user */
@@ -67,10 +62,12 @@ class Create extends Component
 
         $itemRequest = $action->handle($user, [
             'business_unit_id' => (int) $validated['businessUnitId'],
-            'unit_id' => (int) $validated['unitId'],
-            'warehouse_id' => (int) $validated['warehouseId'],
             'notes' => $validated['notes'],
-            'items' => $validated['items'],
+            'items' => array_map(fn (array $item): array => [
+                'item_name' => $item['item_name'],
+                'item_type' => $item['item_type'],
+                'unit_id' => (int) $item['unit_id'],
+            ], $validated['items']),
         ]);
 
         $this->redirectRoute('item-requests.show', $itemRequest, navigate: true);
@@ -80,8 +77,7 @@ class Create extends Component
     {
         $businessUnits = DB::table('business_units')->where('is_active', true)->orderBy('name')->get(['id', 'name']);
         $units = DB::table('units')->where('is_active', true)->orderBy('name')->get(['id', 'name']);
-        $warehouses = DB::table('warehouses')->where('is_active', true)->orderBy('name')->get(['id', 'name']);
 
-        return view('item-request::livewire.create', compact('businessUnits', 'units', 'warehouses'))->layout('layouts.app');
+        return view('item-request::livewire.create', compact('businessUnits', 'units'))->layout('layouts.app');
     }
 }

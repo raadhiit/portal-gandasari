@@ -28,10 +28,8 @@ class Show extends Component
 
     public ?UploadedFile $attachment = null;
 
-    /** @var array<int, array{id: int, category_id: string, item_code: string}> */
+    /** @var array<int, array{id: int, category_id: string, item_code: string, inventory_coa_id: string, sales_coa_id: string}> */
     public array $items = [];
-
-    public ?int $coaId = null;
 
     public function mount(ItemRequest $itemRequest): void
     {
@@ -41,8 +39,9 @@ class Show extends Component
             'id' => $item->id,
             'category_id' => (string) ($item->category_id ?? ''),
             'item_code' => (string) ($item->item_code ?? ''),
+            'inventory_coa_id' => (string) ($item->inventory_coa_id ?? ''),
+            'sales_coa_id' => (string) ($item->sales_coa_id ?? ''),
         ])->all();
-        $this->coaId = $itemRequest->coa_id;
     }
 
     public function validateRequest(ValidateItemRequestAction $action): void
@@ -77,12 +76,22 @@ class Show extends Component
         $this->authorize('account', $this->itemRequest);
 
         $validated = $this->validate([
-            'coaId' => ['required', 'exists:coas,id'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.id' => ['required', 'integer', 'exists:item_request_items,id'],
+            'items.*.inventory_coa_id' => ['required', 'integer', 'exists:coas,id'],
+            'items.*.sales_coa_id' => ['required', 'integer', 'exists:coas,id'],
         ]);
 
         /** @var User $user */
         $user = Auth::user();
-        $this->itemRequest = $action->handle($user, $this->itemRequest, $validated['coaId']);
+        $this->itemRequest = $action->handle($user, $this->itemRequest, array_map(
+            fn (array $item): array => [
+                'id' => (int) $item['id'],
+                'inventory_coa_id' => (int) $item['inventory_coa_id'],
+                'sales_coa_id' => (int) $item['sales_coa_id'],
+            ],
+            $validated['items'],
+        ));
 
         Flux::toast(variant: 'success', text: 'Item request accounted.');
 

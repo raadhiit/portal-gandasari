@@ -11,7 +11,7 @@ use Modules\ItemRequest\Models\ItemRequestHistory;
 class CreateItemRequestAction
 {
     /**
-     * @param  array{business_unit_id: int, unit_id: int, warehouse_id: int, notes?: string|null, items: array<int, array{item_name: string, item_type: string}>}  $input
+     * @param  array{business_unit_id: int, notes?: string|null, items: array<int, array{item_name: string, item_type: string, unit_id: int}>}  $input
      */
     public function handle(User $requester, array $input): ItemRequest
     {
@@ -20,8 +20,6 @@ class CreateItemRequestAction
                 'requester_id' => $requester->id,
                 'department_id' => $requester->department_id,
                 'business_unit_id' => $input['business_unit_id'],
-                'unit_id' => $input['unit_id'],
-                'warehouse_id' => $input['warehouse_id'],
                 'notes' => $input['notes'] ?? null,
                 'status' => ItemRequestStatus::Draft,
                 'current_step' => 'requester',

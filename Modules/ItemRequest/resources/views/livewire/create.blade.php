@@ -8,41 +8,19 @@
         <div class="space-y-5">
             <div class="rounded-2xl border border-[#DCDAD6] bg-white p-5 shadow-sm dark:border-[#383838] dark:bg-[#1A1C1A]">
                 <div class="mb-6 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#3B6478] dark:text-[#6EA3BA]">
-                    <flux:icon icon="cube" class="size-3.5" />
-                    {{ __('Details') }}
+                    <flux:icon icon="building-office" class="size-3.5" />
+                    {{ __('Business unit') }}
                 </div>
-                <div class="grid gap-6 md:grid-cols-3">
-                    <flux:field>
-                        <flux:label>{{ __('Business Unit') }}</flux:label>
-                        <flux:select wire:model="businessUnitId">
-                            <option value="">-- {{ __('Select') }} --</option>
-                            @foreach ($businessUnits as $bu)
-                                <option value="{{ $bu->id }}">{{ $bu->name }}</option>
-                            @endforeach
-                        </flux:select>
-                        <flux:error name="businessUnitId" />
-                    </flux:field>
-                    <flux:field>
-                        <flux:label>{{ __('Unit') }}</flux:label>
-                        <flux:select wire:model="unitId">
-                            <option value="">-- {{ __('Select') }} --</option>
-                            @foreach ($units as $unit)
-                                <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                            @endforeach
-                        </flux:select>
-                        <flux:error name="unitId" />
-                    </flux:field>
-                    <flux:field>
-                        <flux:label>{{ __('Warehouse') }}</flux:label>
-                        <flux:select wire:model="warehouseId">
-                            <option value="">-- {{ __('Select') }} --</option>
-                            @foreach ($warehouses as $wh)
-                                <option value="{{ $wh->id }}">{{ $wh->name }}</option>
-                            @endforeach
-                        </flux:select>
-                        <flux:error name="warehouseId" />
-                    </flux:field>
-                </div>
+                <flux:field>
+                    <flux:label>{{ __('Business Unit') }}</flux:label>
+                    <flux:select wire:model="businessUnitId">
+                        <option value="">-- {{ __('Select') }} --</option>
+                        @foreach ($businessUnits as $bu)
+                            <option value="{{ $bu->id }}">{{ $bu->name }}</option>
+                        @endforeach
+                    </flux:select>
+                    <flux:error name="businessUnitId" />
+                </flux:field>
             </div>
 
             <div class="rounded-2xl border border-[#DCDAD6] bg-white p-5 shadow-sm dark:border-[#383838] dark:bg-[#1A1C1A]">
@@ -56,7 +34,7 @@
 
                 <div class="space-y-4">
                     @foreach ($items as $index => $item)
-                        <div wire:key="item-{{ $index }}" class="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
+                        <div wire:key="item-{{ $index }}" class="grid gap-4 md:grid-cols-[1fr_1fr_13rem_auto]">
                             <flux:field>
                                 <flux:input wire:model="items.{{ $index }}.item_name" placeholder="Item name" />
                                 <flux:error name="items.{{ $index }}.item_name" />
@@ -64,6 +42,15 @@
                             <flux:field>
                                 <flux:input wire:model="items.{{ $index }}.item_type" placeholder="Item type" />
                                 <flux:error name="items.{{ $index }}.item_type" />
+                            </flux:field>
+                            <flux:field>
+                                <flux:select wire:model="items.{{ $index }}.unit_id">
+                                    <option value="">-- {{ __('Unit') }} --</option>
+                                    @foreach ($units as $unit)
+                                        <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                                    @endforeach
+                                </flux:select>
+                                <flux:error name="items.{{ $index }}.unit_id" />
                             </flux:field>
                             <flux:button wire:click="removeItem({{ $index }})" variant="ghost" icon="trash" class="text-red-500" />
                         </div>

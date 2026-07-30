@@ -126,16 +126,35 @@
                                         <flux:icon icon="banknotes" class="size-5" />
                                     </div>
                                     <div class="min-w-0 flex-1">
-                                        <div class="text-sm font-semibold text-[#17201B] dark:text-[#E6E6E4]">{{ __('Map to COA') }}</div>
-                                        <div class="mt-1 text-sm leading-6 text-[#66736D] dark:text-[#9BAAB3]">{{ __('Assign a cost account reference before approval.') }}</div>
-                                        <div class="mt-4 space-y-3">
-                                            <flux:select wire:model="coaId" label="{{ __('COA') }}">
-                                                <option value="">-- {{ __('Select COA') }} --</option>
-                                                @foreach (\App\Models\Coa::all() as $coa)
-                                                    <option value="{{ $coa->id }}">{{ $coa->name }}</option>
-                                                @endforeach
-                                            </flux:select>
-                                            <flux:error name="coaId" />
+                                        <div class="text-sm font-semibold text-[#17201B] dark:text-[#E6E6E4]">{{ __('Map item accounts') }}</div>
+                                        <div class="mt-1 text-sm leading-6 text-[#66736D] dark:text-[#9BAAB3]">{{ __('Assign inventory and sales COA for each item before approval.') }}</div>
+                                        <div class="mt-4 space-y-4">
+                                            @foreach ($itemRequest->items as $index => $requestItem)
+                                                <div wire:key="account-item-{{ $requestItem->id }}" class="grid gap-3 rounded-xl border border-[#DCDAD6] bg-white p-4 dark:border-[#34403C] dark:bg-[#1A1C1A] md:grid-cols-3">
+                                                    <div>
+                                                        <div class="text-sm font-semibold text-[#17201B] dark:text-[#E6E6E4]">{{ $requestItem->item_name }}</div>
+                                                        <div class="mt-1 text-xs text-[#66736D] dark:text-[#9BAAB3]">{{ $requestItem->item_type }}</div>
+                                                    </div>
+                                                    <div>
+                                                        <flux:select wire:model="items.{{ $index }}.inventory_coa_id" label="{{ __('Inventory COA') }}">
+                                                            <option value="">-- {{ __('Select COA') }} --</option>
+                                                            @foreach (\App\Models\Coa::all() as $coa)
+                                                                <option value="{{ $coa->id }}">{{ $coa->name }}</option>
+                                                            @endforeach
+                                                        </flux:select>
+                                                        <flux:error name="items.{{ $index }}.inventory_coa_id" />
+                                                    </div>
+                                                    <div>
+                                                        <flux:select wire:model="items.{{ $index }}.sales_coa_id" label="{{ __('Sales COA') }}">
+                                                            <option value="">-- {{ __('Select COA') }} --</option>
+                                                            @foreach (\App\Models\Coa::all() as $coa)
+                                                                <option value="{{ $coa->id }}">{{ $coa->name }}</option>
+                                                            @endforeach
+                                                        </flux:select>
+                                                        <flux:error name="items.{{ $index }}.sales_coa_id" />
+                                                    </div>
+                                                </div>
+                                            @endforeach
                                         </div>
                                         <div class="mt-4 flex justify-end">
                                             <flux:button type="submit" variant="primary" icon="banknotes">{{ __('Account request') }}</flux:button>
@@ -253,9 +272,12 @@
                                     {{ __('Upload file') }}
                                 </div>
                                 <flux:input type="file" wire:model="attachment" accept=".pdf,.jpg,.jpeg,.png,.xlsx,.docx" />
+                                <div wire:loading wire:target="attachment" class="text-xs text-[#66736D] dark:text-[#9BAAB3]">
+                                    {{ __('Uploading file, please wait...') }}
+                                </div>
                                 <flux:error name="attachment" />
                                 <div class="flex justify-end">
-                                    <flux:button type="submit" wire:loading.attr="disabled" icon="arrow-up-tray">{{ __('Upload file') }}</flux:button>
+                                    <flux:button type="submit" wire:loading.attr="disabled" wire:target="attachment,uploadAttachment" icon="arrow-up-tray">{{ __('Upload file') }}</flux:button>
                                 </div>
                             </form>
                         @endcan
@@ -367,20 +389,31 @@
                                 <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#66736D] dark:text-[#9BAAB3]">{{ __('Items') }}</div>
                                 <div class="mt-3 space-y-3">
                                     @foreach ($itemRequest->items as $requestItem)
-                                        <div class="rounded-xl border border-[#DCDAD6] bg-[#F8F9F7] p-3 dark:border-[#34403C] dark:bg-[#121615]">
-                                            <div class="text-sm font-semibold text-[#17201B] dark:text-[#E6E6E4]">{{ $requestItem->item_name }}</div>
-                                            <div class="mt-1 text-xs text-[#66736D] dark:text-[#9BAAB3]">{{ $requestItem->item_type }}</div>
-                                            <div class="mt-2 grid gap-2 text-xs text-[#66736D] dark:text-[#9BAAB3] md:grid-cols-2">
-                                                <div>{{ __('Category') }}: {{ $requestItem->category_id ? \App\Models\ItemCategory::find($requestItem->category_id)?->name : '—' }}</div>
-                                                <div class="font-mono">{{ __('Code') }}: {{ $requestItem->item_code ?? '—' }}</div>
+                                        <div class="rounded-xl border border-[#DCDAD6] bg-white p-4 shadow-sm dark:border-[#34403C] dark:bg-[#1A1C1A]">
+                                            <div class="flex items-center justify-between gap-2">
+                                                <div class="text-sm font-semibold text-[#17201B] dark:text-[#E6E6E4]">{{ $requestItem->item_name }}</div>
+                                                <flux:badge size="sm" variant="pill" class="bg-[#F4F6F5] text-[#66736D] dark:bg-[#222927]">{{ $requestItem->item_type }}</flux:badge>
+                                            </div>
+                                            <div class="mt-4 grid gap-3 border-t border-[#DCDAD6] pt-3 text-xs dark:border-[#34403C]">
+                                                <div class="flex items-center gap-2 text-[#66736D] dark:text-[#9BAAB3]">
+                                                    <flux:icon icon="cube" class="size-3.5" />
+                                                    {{ $requestItem->unit_id ? \Illuminate\Support\Facades\DB::table('units')->where('id', $requestItem->unit_id)->value('name') : '—' }}
+                                                </div>
+                                                <div class="flex items-center gap-2 text-[#3F7A5F] dark:text-[#75B892]">
+                                                    <flux:icon icon="tag" class="size-3.5" />
+                                                    {{ $requestItem->category_id ? \App\Models\ItemCategory::find($requestItem->category_id)?->name : __('Uncategorized') }}
+                                                    <span class="font-mono text-[#66736D]">{{ $requestItem->item_code ? '('.$requestItem->item_code.')' : '' }}</span>
+                                                </div>
+                                                <div class="flex items-center gap-2 text-[#3B6478] dark:text-[#6EA3BA]">
+                                                    <flux:icon icon="banknotes" class="size-3.5" />
+                                                    {{ $requestItem->inventory_coa_id ? \App\Models\Coa::find($requestItem->inventory_coa_id)?->name : __('Inv COA: —') }}
+                                                    <span class="text-[#66736D]">|</span>
+                                                    {{ $requestItem->sales_coa_id ? \App\Models\Coa::find($requestItem->sales_coa_id)?->name : __('Sales COA: —') }}
+                                                </div>
                                             </div>
                                         </div>
                                     @endforeach
                                 </div>
-                            </div>
-                            <div>
-                                <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#66736D] dark:text-[#9BAAB3]">{{ __('COA') }}</div>
-                                <div class="mt-1.5 text-sm font-semibold text-[#17201B] dark:text-[#E6E6E4]">{{ $itemRequest->coa_id ? \App\Models\Coa::find($itemRequest->coa_id)?->name : '—' }}</div>
                             </div>
                             <div>
                                 <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#66736D] dark:text-[#9BAAB3]">{{ __('Notes') }}</div>

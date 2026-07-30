@@ -14,7 +14,10 @@ return new class extends Migration
         Schema::create('item_request_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('item_request_id')->constrained('item_requests')->cascadeOnDelete();
+            $table->foreignId('unit_id')->constrained('units')->restrictOnDelete();
             $table->foreignId('category_id')->nullable()->constrained('item_categories')->nullOnDelete();
+            $table->foreignId('inventory_coa_id')->nullable()->constrained('coas')->nullOnDelete();
+            $table->foreignId('sales_coa_id')->nullable()->constrained('coas')->nullOnDelete();
             $table->foreignId('created_item_id')->nullable()->constrained('items')->nullOnDelete();
             $table->string('item_name', 150);
             $table->string('item_type');

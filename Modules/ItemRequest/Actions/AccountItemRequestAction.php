@@ -14,23 +14,33 @@ class AccountItemRequestAction
 {
     public function __construct(private WorkflowAuditService $workflowAuditService) {}
 
-    public function handle(User $actor, ItemRequest $itemRequest, int $coaId): ItemRequest
+    /**
+     * @param  array<int, array{id: int, inventory_coa_id: int, sales_coa_id: int}>  $items
+     */
+    public function handle(User $actor, ItemRequest $itemRequest, array $items): ItemRequest
     {
         if ($itemRequest->status !== ItemRequestStatus::Validated) {
             throw ValidationException::withMessages(['status' => 'Item request tidak bisa diaccount dari status saat ini.']);
         }
 
-        return DB::transaction(function () use ($actor, $itemRequest, $coaId): ItemRequest {
-            $before = $itemRequest->toArray();
+        return DB::transaction(function () use ($actor, $itemRequest, $items): ItemRequest {
+            $before = $itemRequest->load('items')->toArray();
+
+            foreach ($items as $item) {
+                $itemRequest->items()->whereKey($item['id'])->update([
+                    'inventory_coa_id' => $item['inventory_coa_id'],
+                    'sales_coa_id' => $item['sales_coa_id'],
+                    'updated_at' => now(),
+                ]);
+            }
 
             $itemRequest->forceFill([
-                'coa_id' => $coaId,
                 'status' => ItemRequestStatus::Accounted,
                 'current_step' => 'approver',
                 'accounted_at' => now(),
             ])->save();
 
-            $freshItemRequest = $itemRequest->fresh();
+            $freshItemRequest = $itemRequest->fresh(['items']);
 
             ItemRequestHistory::create([
                 'item_request_id' => $itemRequest->id,

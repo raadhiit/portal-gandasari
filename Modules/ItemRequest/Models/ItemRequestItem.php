@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $item_type
  * @property string|null $item_code
  */
-#[Fillable(['item_request_id', 'category_id', 'created_item_id', 'item_name', 'item_type', 'item_code'])]
+#[Fillable(['item_request_id', 'unit_id', 'category_id', 'inventory_coa_id', 'sales_coa_id', 'created_item_id', 'item_name', 'item_type', 'item_code'])]
 class ItemRequestItem extends Model
 {
     /** @return BelongsTo<ItemRequest, $this> */

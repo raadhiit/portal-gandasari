@@ -46,12 +46,10 @@ it('runs item request workflow until approved', function () {
 
     $itemRequest = app(CreateItemRequestAction::class)->handle($requester, [
         'business_unit_id' => 1,
-        'unit_id' => 1,
-        'warehouse_id' => 1,
         'notes' => 'Untuk produksi',
         'items' => [
-            ['item_name' => 'Soda Api', 'item_type' => 'Chemical'],
-            ['item_name' => 'Kapur', 'item_type' => 'Chemical'],
+            ['item_name' => 'Soda Api', 'item_type' => 'Chemical', 'unit_id' => 1],
+            ['item_name' => 'Kapur', 'item_type' => 'Chemical', 'unit_id' => 1],
         ],
     ]);
 
@@ -73,7 +71,10 @@ it('runs item request workflow until approved', function () {
     expect($itemRequest->items[1]->item_code)->toBe('ITEM-0002');
     expect($accounting->can('account', $itemRequest))->toBeTrue();
 
-    $itemRequest = app(AccountItemRequestAction::class)->handle($accounting, $itemRequest, 1);
+    $itemRequest = app(AccountItemRequestAction::class)->handle($accounting, $itemRequest, [
+        ['id' => $itemRequest->items[0]->id, 'inventory_coa_id' => 1, 'sales_coa_id' => 1],
+        ['id' => $itemRequest->items[1]->id, 'inventory_coa_id' => 1, 'sales_coa_id' => 1],
+    ]);
     expect($itemRequest->status)->toBe(ItemRequestStatus::Accounted);
 
     $itemRequest = app(ApproveItemRequestAction::class)->handle($accounting, $itemRequest);
@@ -98,10 +99,8 @@ it('rejects invalid transition from draft to validate', function () {
 
     $itemRequest = app(CreateItemRequestAction::class)->handle($requester, [
         'business_unit_id' => 1,
-        'unit_id' => 1,
-        'warehouse_id' => 1,
         'items' => [
-            ['item_name' => 'Plastik', 'item_type' => 'Packaging'],
+            ['item_name' => 'Plastik', 'item_type' => 'Packaging', 'unit_id' => 1],
         ],
     ]);
 
@@ -119,10 +118,8 @@ it('can revise and reject after submitted', function () {
 
     $itemRequest = app(CreateItemRequestAction::class)->handle($requester, [
         'business_unit_id' => 1,
-        'unit_id' => 1,
-        'warehouse_id' => 1,
         'items' => [
-            ['item_name' => 'Karton', 'item_type' => 'Packaging'],
+            ['item_name' => 'Karton', 'item_type' => 'Packaging', 'unit_id' => 1],
         ],
     ]);
 

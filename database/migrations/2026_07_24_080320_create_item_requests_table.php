@@ -16,16 +16,8 @@ return new class extends Migration
             $table->string('request_no')->nullable()->unique();
             $table->foreignId('requester_id')->constrained('users')->restrictOnDelete();
             $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete();
-            $table->foreignId('unit_id')->constrained('units')->restrictOnDelete();
-            $table->foreignId('warehouse_id')->constrained('warehouses')->restrictOnDelete();
-            $table->foreignId('category_id')->nullable()->constrained('item_categories')->nullOnDelete();
-            $table->foreignId('coa_id')->nullable()->constrained('coas')->nullOnDelete();
-            $table->foreignId('created_item_id')->nullable()->constrained('items')->nullOnDelete();
             $table->foreignId('assigned_validator_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('assigned_accounting_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->string('item_name', 150);
-            $table->string('item_type');
-            $table->string('item_code')->nullable()->unique();
             $table->string('status')->index();
             $table->string('current_step')->index();
             $table->unsignedInteger('revision_count')->default(0);
