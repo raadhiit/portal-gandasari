@@ -18,6 +18,11 @@
             <flux:spacer />
 
             <flux:navbar class="me-1.5 space-x-0.5 rtl:space-x-reverse py-0!">
+                @can('notification.view')
+                    <flux:tooltip :content="__('Notifications')" position="bottom">
+                        <flux:navbar.item class="!h-10 [&>div>svg]:size-5" icon="bell" :href="route('notifications.index')" :current="request()->routeIs('notifications.*')" :badge="auth()->user()->unreadNotifications()->count() ?: null" wire:navigate :label="__('Notifications')" />
+                    </flux:tooltip>
+                @endcan
                 <flux:tooltip :content="__('Search')" position="bottom">
                     <flux:navbar.item class="!h-10 [&>div>svg]:size-5" icon="magnifying-glass" href="#" :label="__('Search')" />
                 </flux:tooltip>

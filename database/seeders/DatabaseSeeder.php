@@ -13,6 +13,8 @@ class DatabaseSeeder extends Seeder
             SystemSeeder::class,
             MenuSeeder::class,
             RoleAndPermissionSeeder::class,
+            MasterDataSeeder::class,
+            CoaSeeder::class,
             AdminUserSeeder::class,
         ]);
     }
