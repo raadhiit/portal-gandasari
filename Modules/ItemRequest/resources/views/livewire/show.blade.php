@@ -50,9 +50,14 @@
                             </div>
                             <flux:heading size="xl" level="1" class="mt-3 text-[#17201B] dark:text-[#E6E6E4]">{{ $itemRequest->items->first()?->item_name ?? __('Item request') }}</flux:heading>
                         </div>
-                        <div class="inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm" style="background-color: {{ $current['tone'] }}">
-                            <flux:icon :icon="$current['icon']" class="size-4" />
-                            {{ $current['label'] }}
+                        <div class="flex shrink-0 items-center gap-3">
+                            @can('export', $itemRequest)
+                                <flux:button :href="route('item-requests.exports.index')" icon="arrow-down-tray">{{ __('Export Excel') }}</flux:button>
+                            @endcan
+                            <div class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm" style="background-color: {{ $current['tone'] }}">
+                                <flux:icon :icon="$current['icon']" class="size-4" />
+                                {{ $current['label'] }}
+                            </div>
                         </div>
                     </div>
 
@@ -127,7 +132,7 @@
                                     </div>
                                     <div class="min-w-0 flex-1">
                                         <div class="text-sm font-semibold text-[#17201B] dark:text-[#E6E6E4]">{{ __('Map item accounts') }}</div>
-                                        <div class="mt-1 text-sm leading-6 text-[#66736D] dark:text-[#9BAAB3]">{{ __('Assign inventory and sales COA for each item before approval.') }}</div>
+                                        <div class="mt-1 text-sm leading-6 text-[#66736D] dark:text-[#9BAAB3]">{{ __('Assign inventory and sales COA for each item. This is the final approval step.') }}</div>
                                         <div class="mt-4 space-y-4">
                                             @foreach ($itemRequest->items as $index => $requestItem)
                                                 <div wire:key="account-item-{{ $requestItem->id }}" class="grid gap-3 rounded-xl border border-[#DCDAD6] bg-white p-4 dark:border-[#34403C] dark:bg-[#1A1C1A] md:grid-cols-3">
@@ -157,29 +162,14 @@
                                             @endforeach
                                         </div>
                                         <div class="mt-4 flex justify-end">
-                                            <flux:button type="submit" variant="primary" icon="banknotes">{{ __('Account request') }}</flux:button>
+                                            <flux:button type="submit" variant="primary" icon="banknotes">{{ __('Account and approve') }}</flux:button>
                                         </div>
                                     </div>
                                 </div>
                             </form>
                         @endcan
 
-                        @can('approve', $itemRequest)
-                            <div class="rounded-xl border border-[#DCDAD6] border-l-4 border-l-[#327A7A] bg-[#F6FBFA] p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] dark:border-[#34403C] dark:border-l-[#6DB8B3] dark:bg-[#1E2726]">
-                                <div class="flex items-start gap-4">
-                                    <div class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-[#327A7A] shadow-sm dark:bg-[#2A3D3C] dark:text-[#6DB8B3]">
-                                        <flux:icon icon="check-badge" class="size-5" />
-                                    </div>
-                                    <div class="min-w-0 flex-1">
-                                        <div class="text-sm font-semibold text-[#17201B] dark:text-[#E6E6E4]">{{ __('Final approval') }}</div>
-                                        <div class="mt-1 text-sm leading-6 text-[#66736D] dark:text-[#9BAAB3]">{{ __('All references complete — confirm and close the routing sheet.') }}</div>
-                                        <div class="mt-4 flex justify-end">
-                                            <flux:button wire:click="approve" wire:loading.attr="disabled" variant="primary" icon="check-badge">{{ __('Approve request') }}</flux:button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endcan
+
                     </div>
 
                     <div class="space-y-4">

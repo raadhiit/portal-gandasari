@@ -83,6 +83,13 @@ class ItemRequestPolicy
             && $itemRequest->status === ItemRequestStatus::Accounted;
     }
 
+    public function export(User $user, ItemRequest $itemRequest): bool
+    {
+        return $user->can('item-request.export')
+            && $this->inDepartmentScope($user, $itemRequest)
+            && $itemRequest->status === ItemRequestStatus::Approved;
+    }
+
     private function inDepartmentScope(User $user, ItemRequest $itemRequest): bool
     {
         return $user->department_id !== null && $user->department_id === $itemRequest->department_id;

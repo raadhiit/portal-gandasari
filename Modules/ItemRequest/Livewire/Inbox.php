@@ -22,7 +22,6 @@ class Inbox extends Component
     {
         $this->mode = match (true) {
             request()->routeIs('item-requests.accounting-inbox') => 'accounting',
-            request()->routeIs('item-requests.approval-inbox') => 'approval',
             default => 'validation',
         };
     }
@@ -33,13 +32,11 @@ class Inbox extends Component
 
         $status = match ($this->mode) {
             'accounting' => ItemRequestStatus::Validated,
-            'approval' => ItemRequestStatus::Accounted,
             default => ItemRequestStatus::Submitted,
         };
 
         $permission = match ($this->mode) {
             'accounting' => 'item-request.account',
-            'approval' => 'item-request.approve',
             default => 'item-request.validate',
         };
 

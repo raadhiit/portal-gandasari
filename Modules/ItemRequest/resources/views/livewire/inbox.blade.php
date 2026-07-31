@@ -2,19 +2,11 @@
     $inboxConfig = match ($mode) {
         'accounting' => [
             'title' => __('Accounting inbox'),
-            'description' => __('Match validated item requests to the correct COA before handing them to approval.'),
+            'description' => __('Match validated item requests to the correct COA before final approval.'),
             'icon' => 'banknotes',
             'accent' => '#5D7A6F',
             'lane' => __('COA mapping lane'),
             'action' => __('Assign COA'),
-        ],
-        'approval' => [
-            'title' => __('Approval inbox'),
-            'description' => __('Review completed warehouse and accounting references, then close the routing sheet.'),
-            'icon' => 'check-badge',
-            'accent' => '#7C94A6',
-            'lane' => __('Final review lane'),
-            'action' => __('Review approval'),
         ],
         default => [
             'title' => __('Validation inbox'),
@@ -76,7 +68,11 @@
             </div>
         </div>
 
-        <div class="space-y-3">
+        <div class="relative space-y-3">
+            <div wire:loading.flex wire:target="nextPage,previousPage,gotoPage" class="absolute inset-0 z-10 items-center justify-center rounded-[1.75rem] bg-[#FAF6F0]/80 backdrop-blur-[1px] dark:bg-[#1B201D]/80">
+                <flux:icon icon="arrow-path" class="size-6 animate-spin text-[#8C6D57] dark:text-[#CAB49A]" />
+                <span class="sr-only">{{ __('Loading page') }}</span>
+            </div>
             @forelse ($itemRequests as $req)
                 <article wire:key="inbox-request-{{ $req->id }}" class="group relative overflow-hidden rounded-[1.75rem] border border-[#DCDAD6] bg-white shadow-[0_6px_20px_rgba(0,0,0,0.04)] transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(0,0,0,0.08)] dark:border-[#34403C] dark:bg-[#1A1C1A]">
                     <div class="absolute inset-y-0 left-0 w-1.5" style="background-color: {{ $inboxConfig['accent'] }}"></div>

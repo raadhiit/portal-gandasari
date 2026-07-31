@@ -5,7 +5,11 @@
             <flux:input wire:model.live.debounce="search" placeholder="{{ __('Search name or email') }}" />
         </div>
 
-        <div class="mt-6 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
+        <div class="relative mt-6 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
+            <div wire:loading.flex wire:target="nextPage,previousPage,gotoPage" class="absolute inset-0 z-10 items-center justify-center bg-white/75 backdrop-blur-[1px] dark:bg-neutral-900/75">
+                <flux:icon icon="arrow-path" class="size-6 animate-spin text-[#3B6478]" />
+                <span class="sr-only">{{ __('Loading page') }}</span>
+            </div>
             <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
                 <thead class="bg-neutral-50 dark:bg-neutral-900">
                     <tr class="text-left text-sm font-medium text-neutral-700 dark:text-neutral-200">

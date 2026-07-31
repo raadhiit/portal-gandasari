@@ -9,10 +9,14 @@ use Modules\ItemRequest\Enums\ItemRequestStatus;
 use Modules\ItemRequest\Models\ItemRequest;
 use Modules\ItemRequest\Models\ItemRequestHistory;
 use Modules\ItemRequest\Support\WorkflowAuditService;
+use Modules\ItemRequest\Support\WorkflowNotificationService;
 
 class AccountItemRequestAction
 {
-    public function __construct(private WorkflowAuditService $workflowAuditService) {}
+    public function __construct(
+        private WorkflowAuditService $workflowAuditService,
+        private WorkflowNotificationService $workflowNotificationService,
+    ) {}
 
     /**
      * @param  array<int, array{id: int, inventory_coa_id: int, sales_coa_id: int}>  $items
@@ -35,9 +39,10 @@ class AccountItemRequestAction
             }
 
             $itemRequest->forceFill([
-                'status' => ItemRequestStatus::Accounted,
-                'current_step' => 'approver',
+                'status' => ItemRequestStatus::Approved,
+                'current_step' => 'done',
                 'accounted_at' => now(),
+                'approved_at' => now(),
             ])->save();
 
             $freshItemRequest = $itemRequest->fresh(['items']);
@@ -45,14 +50,15 @@ class AccountItemRequestAction
             ItemRequestHistory::create([
                 'item_request_id' => $itemRequest->id,
                 'actor_id' => $actor->id,
-                'action' => 'accounted',
+                'action' => 'approved',
                 'from_status' => $itemRequest->getOriginal('status'),
-                'to_status' => ItemRequestStatus::Accounted->value,
+                'to_status' => ItemRequestStatus::Approved->value,
                 'snapshot' => $freshItemRequest?->toArray(),
             ]);
 
             if ($freshItemRequest !== null) {
-                $this->workflowAuditService->log($actor, $freshItemRequest, 'account', null, $before, $freshItemRequest->toArray());
+                $this->workflowNotificationService->notifyApproved($freshItemRequest);
+                $this->workflowAuditService->log($actor, $freshItemRequest, 'approve', null, $before, $freshItemRequest->toArray());
             }
 
             return $freshItemRequest;

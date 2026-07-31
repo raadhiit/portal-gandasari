@@ -6,7 +6,11 @@
         @endif
     </div>
 
-    <div class="mt-6 grid gap-4">
+    <div class="relative mt-6 grid gap-4">
+        <div wire:loading.flex wire:target="nextPage,previousPage,gotoPage" class="absolute inset-0 z-10 items-center justify-center rounded-xl bg-white/75 backdrop-blur-[1px] dark:bg-zinc-900/75">
+            <flux:icon icon="arrow-path" class="size-6 animate-spin text-[#3B6478]" />
+            <span class="sr-only">{{ __('Loading page') }}</span>
+        </div>
         @forelse ($notifications as $notification)
             <flux:card wire:key="notif-{{ $notification->id }}" class="flex items-start justify-between {{ $notification->read_at ? 'opacity-70' : '' }}">
                 <div class="flex-1">

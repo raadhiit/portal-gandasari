@@ -2,6 +2,7 @@
 
 namespace Modules\ItemRequest\Models;
 
+use App\Models\ItemRequestExport;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -90,5 +91,11 @@ class ItemRequest extends Model
     public function items(): HasMany
     {
         return $this->hasMany(ItemRequestItem::class);
+    }
+
+    /** @return HasMany<ItemRequestExport, $this> */
+    public function exports(): HasMany
+    {
+        return $this->hasMany(ItemRequestExport::class);
     }
 }

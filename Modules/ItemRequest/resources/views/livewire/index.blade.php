@@ -32,7 +32,11 @@
         <flux:button :href="route('item-requests.create')" wire:navigate icon="plus" variant="primary">{{ __('New Request') }}</flux:button>
     </div>
 
-    <div class="overflow-hidden rounded-2xl border border-[#DCDAD6] bg-white shadow-sm dark:border-[#383838] dark:bg-[#1A1C1A]">
+    <div class="relative overflow-hidden rounded-2xl border border-[#DCDAD6] bg-white shadow-sm dark:border-[#383838] dark:bg-[#1A1C1A]">
+        <div wire:loading.flex wire:target="nextPage,previousPage,gotoPage" class="absolute inset-0 z-10 items-center justify-center bg-white/75 backdrop-blur-[1px] dark:bg-[#1A1C1A]/75">
+            <flux:icon icon="arrow-path" class="size-6 animate-spin text-[#3B6478]" />
+            <span class="sr-only">{{ __('Loading page') }}</span>
+        </div>
         <table class="min-w-full divide-y divide-[#DCDAD6] dark:divide-[#383838]">
             <thead class="bg-[#F4F6F5] dark:bg-[#121615]">
                 <tr class="text-left text-[11px] font-semibold uppercase tracking-[0.2em] text-[#66736D] dark:text-[#9BAAB3]">

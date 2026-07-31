@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Livewire\ItemRequest\ExportIndex as ItemRequestExportIndex;
 use App\Livewire\NotificationCenter;
 use App\Models\User;
 use App\Observers\UserObserver;
@@ -45,6 +46,7 @@ class AppServiceProvider extends ServiceProvider
         Livewire::component('item-request.create', Create::class);
         Livewire::component('item-request.show', Show::class);
         Livewire::component('item-request.inbox', Inbox::class);
+        Livewire::component('item-request.export-index', ItemRequestExportIndex::class);
         Livewire::component('iam.user-index', UserIndex::class);
         Livewire::component('iam.user-edit', UserEdit::class);
 

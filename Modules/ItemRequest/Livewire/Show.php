@@ -12,7 +12,6 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\WithFileUploads;
 use Modules\ItemRequest\Actions\AccountItemRequestAction;
-use Modules\ItemRequest\Actions\ApproveItemRequestAction;
 use Modules\ItemRequest\Actions\SubmitItemRequestAction;
 use Modules\ItemRequest\Actions\ValidateItemRequestAction;
 use Modules\ItemRequest\Models\ItemRequest;
@@ -93,9 +92,9 @@ class Show extends Component
             $validated['items'],
         ));
 
-        Flux::toast(variant: 'success', text: 'Item request accounted.');
+        Flux::toast(variant: 'success', text: 'Item request approved.');
 
-        $this->redirectRoute('item-requests.accounting-inbox');
+        $this->redirectRoute('item-requests.index');
     }
 
     public function submit(SubmitItemRequestAction $action): void
@@ -107,19 +106,6 @@ class Show extends Component
         $this->itemRequest = $action->handle($user, $this->itemRequest);
 
         Flux::toast(variant: 'success', text: 'Item request submitted.');
-
-        $this->redirectRoute('item-requests.index');
-    }
-
-    public function approve(ApproveItemRequestAction $action): void
-    {
-        $this->authorize('approve', $this->itemRequest);
-
-        /** @var User $user */
-        $user = Auth::user();
-        $this->itemRequest = $action->handle($user, $this->itemRequest);
-
-        Flux::toast(variant: 'success', text: 'Item request approved.');
 
         $this->redirectRoute('item-requests.index');
     }

@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Modules\ItemRequest\Actions\AccountItemRequestAction;
-use Modules\ItemRequest\Actions\ApproveItemRequestAction;
 use Modules\ItemRequest\Actions\CreateItemRequestAction;
 use Modules\ItemRequest\Actions\RejectItemRequestAction;
 use Modules\ItemRequest\Actions\ReviseItemRequestAction;
@@ -75,12 +74,9 @@ it('runs item request workflow until approved', function () {
         ['id' => $itemRequest->items[0]->id, 'inventory_coa_id' => 1, 'sales_coa_id' => 1],
         ['id' => $itemRequest->items[1]->id, 'inventory_coa_id' => 1, 'sales_coa_id' => 1],
     ]);
-    expect($itemRequest->status)->toBe(ItemRequestStatus::Accounted);
-
-    $itemRequest = app(ApproveItemRequestAction::class)->handle($accounting, $itemRequest);
     expect($itemRequest->status)->toBe(ItemRequestStatus::Approved);
 
-    expect($itemRequest->histories()->count())->toBe(5);
+    expect($itemRequest->histories()->count())->toBe(4);
     Notification::assertSentTo($validator, ItemRequestStatusChangedNotification::class, function (ItemRequestStatusChangedNotification $notification): bool {
         return $notification->status === ItemRequestStatus::Submitted->value;
     });
@@ -90,7 +86,7 @@ it('runs item request workflow until approved', function () {
     Notification::assertSentTo($requester, ItemRequestStatusChangedNotification::class, function (ItemRequestStatusChangedNotification $notification): bool {
         return $notification->status === ItemRequestStatus::Approved->value;
     });
-    expect(DB::table('audit_logs')->where('module', 'item-request')->count())->toBe(4);
+    expect(DB::table('audit_logs')->where('module', 'item-request')->count())->toBe(3);
 });
 
 it('rejects invalid transition from draft to validate', function () {
