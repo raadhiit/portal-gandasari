@@ -102,8 +102,8 @@ class ExportItemRequest implements ShouldQueue
                 'D' => $item->item_type,
                 'E' => $this->lookupCategoryCode($item->category_id),
                 'G' => $this->lookupUnitCode($item->unit_id),
-                'BM' => $this->lookupCoaCode($item->inventory_coa_id), // Persediaan
-                'BN' => $this->lookupCoaCode($item->sales_coa_id),     // Penjualan
+                'BL' => $this->lookupCoaCode($item->inventory_coa_id),
+                'BM' => $this->lookupCoaCode($item->sales_coa_id),
                 'BT' => $itemRequest->notes,
             ];
 
@@ -134,7 +134,7 @@ class ExportItemRequest implements ShouldQueue
     /** @return array<int, string> */
     private function columnMap(): array
     {
-        return ['A', 'B', 'C', 'D', 'E', 'G', 'BM', 'BN', 'BO', 'BT'];
+        return ['A', 'B', 'C', 'D', 'E', 'G', 'BL', 'BM', 'BT'];
     }
 
     private function lookupCategoryCode(?int $categoryId): string

@@ -98,11 +98,11 @@ it('generates export file with coa mapping and allows authorized download', func
     $sheetXml = (string) $zip->getFromName('xl/worksheets/sheet1.xml');
     $zip->close();
 
+    expect($sheetXml)->toContain('r="BL2"');
     expect($sheetXml)->toContain('r="BM2"');
-    expect($sheetXml)->toContain('r="BN2"');
     expect($sheetXml)->toContain('6000');
     expect($sheetXml)->toContain('6100');
-    expect($sheetXml)->not->toContain('r="BO2" t="inlineStr"><is><t>6100</t></is></c>');
+    expect($sheetXml)->not->toContain('r="BN2" t="inlineStr"><is><t>6100</t></is></c>');
 
     Notification::assertSentTo($requester, ItemRequestExportReadyNotification::class);
 
