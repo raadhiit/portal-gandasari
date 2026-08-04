@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Modules\ItemRequest\Enums\ItemRequestStatus;
 use Modules\ItemRequest\Models\ItemRequest;
+use Modules\ItemRequest\Models\ItemRequestHistory;
 
 #[Title('Item Requests')]
 class Index extends Component
@@ -30,6 +32,82 @@ class Index extends Component
         $this->resetPage();
     }
 
+    /** @return array<int, array{key: string, label: string, detail: string, icon: string, state: string}> */
+    public function trackingSteps(ItemRequest $itemRequest): array
+    {
+        $itemRequest->loadMissing('histories.actor');
+
+        $stepDefinitions = [
+            [
+                'key' => 'draft_created',
+                'label' => 'Created',
+                'icon' => 'document-plus',
+                'history' => fn ($history): bool => $history->action === 'draft_created',
+                'complete' => fn (ItemRequest $request): bool => true,
+            ],
+            [
+                'key' => 'submitted',
+                'label' => 'Submitted',
+                'icon' => 'paper-airplane',
+                'history' => fn ($history): bool => $history->action === 'submitted',
+                'complete' => fn (ItemRequest $request): bool => in_array($request->status, [ItemRequestStatus::Submitted, ItemRequestStatus::Validated, ItemRequestStatus::Approved], true),
+            ],
+            [
+                'key' => 'validated',
+                'label' => 'Validated',
+                'icon' => 'shield-check',
+                'history' => fn ($history): bool => $history->action === 'validated',
+                'complete' => fn (ItemRequest $request): bool => in_array($request->status, [ItemRequestStatus::Validated, ItemRequestStatus::Approved], true),
+            ],
+            [
+                'key' => 'approved',
+                'label' => 'Accounting approved',
+                'icon' => 'banknotes',
+                'history' => fn ($history): bool => $history->action === 'approved',
+                'complete' => fn (ItemRequest $request): bool => $request->status === ItemRequestStatus::Approved,
+            ],
+        ];
+
+        return collect($stepDefinitions)->map(function (array $step) use ($itemRequest): array {
+            $history = $itemRequest->histories->first($step['history']);
+            $isComplete = $step['complete']($itemRequest);
+            $isCurrent = ! $isComplete && $this->currentTrackingStepKey($itemRequest) === $step['key'];
+
+            return [
+                'key' => $step['key'],
+                'label' => $step['label'],
+                'icon' => $step['icon'],
+                'state' => $isComplete ? 'complete' : ($isCurrent ? 'current' : 'pending'),
+                'detail' => $history instanceof ItemRequestHistory
+                    ? sprintf('%s · %s', $history->actor?->name ?? 'System', $history->created_at?->format('d M Y H:i') ?? '—')
+                    : ($isCurrent ? 'Waiting at this step' : 'Pending'),
+            ];
+        })->all();
+    }
+
+    public function trackingSummary(ItemRequest $itemRequest): string
+    {
+        return match ($itemRequest->status) {
+            ItemRequestStatus::Draft => 'Created',
+            ItemRequestStatus::Submitted => 'Waiting for validation',
+            ItemRequestStatus::Validated => 'Waiting for accounting approval',
+            ItemRequestStatus::Approved => 'Approved',
+            ItemRequestStatus::Revised => 'Revised',
+            ItemRequestStatus::Rejected => 'Rejected',
+            default => str($itemRequest->status->value)->headline()->value(),
+        };
+    }
+
+    private function currentTrackingStepKey(ItemRequest $itemRequest): string
+    {
+        return match ($itemRequest->status) {
+            ItemRequestStatus::Draft => 'submitted',
+            ItemRequestStatus::Submitted => 'validated',
+            ItemRequestStatus::Validated => 'approved',
+            default => 'approved',
+        };
+    }
+
     public function render(): View
     {
         $this->authorize('viewAny', ItemRequest::class);
@@ -37,7 +115,7 @@ class Index extends Component
         $user = Auth::user();
 
         $itemRequests = ItemRequest::query()
-            ->with(['requester', 'items'])
+            ->with(['requester', 'items', 'histories.actor'])
             ->withCount('items')
             ->when(! $user->hasAnyPermission(['item-request.validate', 'item-request.account', 'item-request.approve']), fn (Builder $query): Builder => $query->where('requester_id', $user->id))
             ->when($user->hasAnyPermission(['item-request.validate', 'item-request.account', 'item-request.approve']), fn (Builder $query): Builder => $query->where('department_id', $user->department_id))

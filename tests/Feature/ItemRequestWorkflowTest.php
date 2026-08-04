@@ -3,10 +3,13 @@
 use App\Models\User;
 use App\Notifications\ItemRequestStatusChangedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Livewire\Livewire;
 use Modules\ItemRequest\Actions\AccountItemRequestAction;
 use Modules\ItemRequest\Actions\CreateItemRequestAction;
 use Modules\ItemRequest\Actions\RejectItemRequestAction;
@@ -14,6 +17,8 @@ use Modules\ItemRequest\Actions\ReviseItemRequestAction;
 use Modules\ItemRequest\Actions\SubmitItemRequestAction;
 use Modules\ItemRequest\Actions\ValidateItemRequestAction;
 use Modules\ItemRequest\Enums\ItemRequestStatus;
+use Modules\ItemRequest\Livewire\Create as CreateItemRequest;
+use Modules\ItemRequest\Models\ItemRequest;
 
 uses(RefreshDatabase::class);
 
@@ -89,6 +94,67 @@ it('runs item request workflow until approved', function () {
     expect(DB::table('audit_logs')->where('module', 'item-request')->count())->toBe(3);
 });
 
+it('creates, attaches file, and auto submits item request from create form', function () {
+    Notification::fake();
+    Storage::fake('public');
+
+    $requester = User::factory()->create(['department_id' => 1]);
+    $validator = User::factory()->create(['department_id' => 1]);
+
+    $requester->givePermissionTo(['item-request.create', 'item-request.submit', 'item-request.view']);
+    $validator->givePermissionTo(['item-request.view', 'item-request.validate']);
+
+    $this->actingAs($requester);
+
+    Livewire::test(CreateItemRequest::class)
+        ->set('businessUnitId', '1')
+        ->set('notes', 'Lampiran wajib')
+        ->set('items', [
+            ['item_name' => 'Soda Api', 'item_type' => 'Chemical', 'unit_id' => '1'],
+        ])
+        ->set('attachment', UploadedFile::fake()->create('spec-sheet.pdf', 120, 'application/pdf'))
+        ->call('save')
+        ->assertRedirect(route('item-requests.index', absolute: false));
+
+    $itemRequest = ItemRequest::query()->with('attachments')->latest('id')->first();
+
+    expect($itemRequest)->not->toBeNull();
+    expect($itemRequest->status)->toBe(ItemRequestStatus::Submitted);
+    expect($itemRequest->request_no)->not->toBeNull();
+    expect($itemRequest->attachments)->toHaveCount(1);
+
+    Storage::disk('public')->assertExists($itemRequest->attachments->first()->path);
+
+    $this->actingAs($validator)
+        ->get(route('item-requests.show', $itemRequest))
+        ->assertSuccessful()
+        ->assertSee('spec-sheet.pdf')
+        ->assertDontSee('Upload file')
+        ->assertDontSee('Add note')
+        ->assertDontSee('Comments');
+});
+
+it('shows approval tracking modal trigger on request index', function () {
+    $requester = User::factory()->create(['department_id' => 1]);
+    $requester->givePermissionTo(['item-request.create', 'item-request.submit', 'item-request.view']);
+
+    $itemRequest = app(CreateItemRequestAction::class)->handle($requester, [
+        'business_unit_id' => 1,
+        'items' => [
+            ['item_name' => 'Tracking Item', 'item_type' => 'Chemical', 'unit_id' => 1],
+        ],
+    ]);
+
+    app(SubmitItemRequestAction::class)->handle($requester, $itemRequest);
+
+    $this->actingAs($requester)
+        ->get(route('item-requests.index'))
+        ->assertSuccessful()
+        ->assertSee('Track')
+        ->assertSee('Waiting for validation')
+        ->assertSee('Submitted');
+});
+
 it('rejects invalid transition from draft to validate', function () {
     $requester = User::factory()->create(['department_id' => 1]);
     $validator = User::factory()->create(['department_id' => 1]);
@@ -102,6 +168,66 @@ it('rejects invalid transition from draft to validate', function () {
 
     expect(fn () => app(ValidateItemRequestAction::class)->handle($validator, $itemRequest, [
         ['id' => $itemRequest->items[0]->id, 'category_id' => 1, 'item_code' => 'ITEM-0003'],
+    ]))->toThrow(ValidationException::class);
+});
+
+it('rejects validation when item code already exists in master items', function () {
+    $requester = User::factory()->create(['department_id' => 1]);
+    $validator = User::factory()->create(['department_id' => 1]);
+
+    DB::table('items')->insert([
+        'category_id' => 1,
+        'unit_id' => 1,
+        'warehouse_id' => 1,
+        'item_code' => 'ITEM-EXISTING',
+        'name' => 'Existing Item',
+        'item_type' => 'Chemical',
+        'is_active' => true,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $itemRequest = app(CreateItemRequestAction::class)->handle($requester, [
+        'business_unit_id' => 1,
+        'items' => [
+            ['item_name' => 'Baru', 'item_type' => 'Chemical', 'unit_id' => 1],
+        ],
+    ]);
+
+    $itemRequest = app(SubmitItemRequestAction::class)->handle($requester, $itemRequest);
+
+    expect(fn () => app(ValidateItemRequestAction::class)->handle($validator, $itemRequest, [
+        ['id' => $itemRequest->items[0]->id, 'category_id' => 1, 'item_code' => 'ITEM-EXISTING'],
+    ]))->toThrow(ValidationException::class);
+});
+
+it('rejects validation when duplicate item code is used across request items', function () {
+    $requester = User::factory()->create(['department_id' => 1]);
+    $validator = User::factory()->create(['department_id' => 1]);
+
+    $existingRequest = app(CreateItemRequestAction::class)->handle($requester, [
+        'business_unit_id' => 1,
+        'items' => [
+            ['item_name' => 'Existing Request Item', 'item_type' => 'Chemical', 'unit_id' => 1],
+        ],
+    ]);
+
+    $existingRequest = app(SubmitItemRequestAction::class)->handle($requester, $existingRequest);
+    $existingRequest = app(ValidateItemRequestAction::class)->handle($validator, $existingRequest, [
+        ['id' => $existingRequest->items[0]->id, 'category_id' => 1, 'item_code' => 'ITEM-DUPLICATE'],
+    ]);
+
+    $newRequest = app(CreateItemRequestAction::class)->handle($requester, [
+        'business_unit_id' => 1,
+        'items' => [
+            ['item_name' => 'New Request Item', 'item_type' => 'Chemical', 'unit_id' => 1],
+        ],
+    ]);
+
+    $newRequest = app(SubmitItemRequestAction::class)->handle($requester, $newRequest);
+
+    expect(fn () => app(ValidateItemRequestAction::class)->handle($validator, $newRequest, [
+        ['id' => $newRequest->items[0]->id, 'category_id' => 1, 'item_code' => 'ITEM-DUPLICATE'],
     ]))->toThrow(ValidationException::class);
 });
 

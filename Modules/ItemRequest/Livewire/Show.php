@@ -2,15 +2,15 @@
 
 namespace Modules\ItemRequest\Livewire;
 
+use App\Models\Item;
 use App\Models\User;
 use Flux\Flux;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Livewire\Features\SupportFileUploads\WithFileUploads;
 use Modules\ItemRequest\Actions\AccountItemRequestAction;
 use Modules\ItemRequest\Actions\SubmitItemRequestAction;
 use Modules\ItemRequest\Actions\ValidateItemRequestAction;
@@ -19,13 +19,9 @@ use Modules\ItemRequest\Models\ItemRequest;
 #[Title('Item Request Detail')]
 class Show extends Component
 {
-    use AuthorizesRequests, WithFileUploads;
+    use AuthorizesRequests;
 
     public ItemRequest $itemRequest;
-
-    public string $commentBody = '';
-
-    public ?UploadedFile $attachment = null;
 
     /** @var array<int, array{id: int, category_id: string, item_code: string, inventory_coa_id: string, sales_coa_id: string}> */
     public array $items = [];
@@ -51,8 +47,31 @@ class Show extends Component
             'items' => ['required', 'array', 'min:1'],
             'items.*.id' => ['required', 'integer', 'exists:item_request_items,id'],
             'items.*.category_id' => ['required', 'integer', 'exists:item_categories,id'],
-            'items.*.item_code' => ['required', 'string', 'max:50'],
+            'items.*.item_code' => ['required', 'string', 'max:50', 'distinct'],
         ]);
+
+        foreach ($validated['items'] as $index => $item) {
+            $itemCode = trim((string) $item['item_code']);
+            $itemId = (int) $item['id'];
+
+            validator(
+                ['item_code' => $itemCode],
+                [
+                    'item_code' => [
+                        'required',
+                        'string',
+                        'max:50',
+                        Rule::unique(Item::class, 'item_code'),
+                        Rule::unique('item_request_items', 'item_code')->ignore($itemId),
+                    ],
+                ],
+                [
+                    'item_code.unique' => __('Item code has already been used.'),
+                ],
+            )->validate();
+
+            $validated['items'][$index]['item_code'] = $itemCode;
+        }
 
         /** @var User $user */
         $user = Auth::user();
@@ -110,57 +129,9 @@ class Show extends Component
         $this->redirectRoute('item-requests.index');
     }
 
-    public function addComment(): void
-    {
-        abort_unless(Auth::user()->can('item-request.comment'), 403);
-
-        $validated = $this->validate([
-            'commentBody' => ['required', 'string', 'max:1000'],
-        ]);
-
-        /** @var User $user */
-        $user = Auth::user();
-
-        $this->itemRequest->comments()->create([
-            'user_id' => $user->id,
-            'body' => $validated['commentBody'],
-        ]);
-
-        $this->commentBody = '';
-        Flux::toast(variant: 'success', text: 'Comment added.');
-    }
-
-    public function uploadAttachment(): void
-    {
-        abort_unless(Auth::user()->can('item-request.attach'), 403);
-
-        $validated = $this->validate([
-            'attachment' => ['required', 'file', 'max:5120', 'mimes:pdf,jpg,jpeg,png,xlsx,docx'],
-        ]);
-
-        /** @var User $user */
-        $user = Auth::user();
-        /** @var UploadedFile $attachment */
-        $attachment = $validated['attachment'];
-
-        $path = $attachment->store('item-request-attachments', 'public');
-
-        $this->itemRequest->attachments()->create([
-            'uploaded_by' => $user->id,
-            'disk' => 'public',
-            'path' => $path,
-            'original_name' => $attachment->getClientOriginalName(),
-            'mime_type' => $attachment->getMimeType(),
-            'size' => $attachment->getSize(),
-        ]);
-
-        $this->attachment = null;
-        Flux::toast(variant: 'success', text: 'Attachment uploaded.');
-    }
-
     public function render(): View
     {
-        $this->itemRequest->load(['requester', 'histories.actor', 'comments.user', 'attachments', 'items']);
+        $this->itemRequest->load(['requester', 'histories.actor', 'attachments', 'items']);
 
         return view('item-request::livewire.show')->layout('layouts.app');
     }

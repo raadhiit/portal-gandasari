@@ -8,6 +8,7 @@ use Illuminate\Validation\ValidationException;
 use Modules\ItemRequest\Enums\ItemRequestStatus;
 use Modules\ItemRequest\Models\ItemRequest;
 use Modules\ItemRequest\Models\ItemRequestHistory;
+use Modules\ItemRequest\Models\ItemRequestItem;
 use Modules\ItemRequest\Support\WorkflowAuditService;
 use Modules\ItemRequest\Support\WorkflowNotificationService;
 
@@ -31,9 +32,23 @@ class ValidateItemRequestAction
             $before = $itemRequest->load('items')->toArray();
 
             foreach ($items as $item) {
+                $itemCode = trim($item['item_code']);
+
+                if (DB::table('items')->where('item_code', $itemCode)->exists()) {
+                    throw ValidationException::withMessages([
+                        'items' => sprintf('Item code %s has already been used in master items.', $itemCode),
+                    ]);
+                }
+
+                if (ItemRequestItem::query()->where('item_code', $itemCode)->whereKeyNot($item['id'])->exists()) {
+                    throw ValidationException::withMessages([
+                        'items' => sprintf('Item code %s has already been used in another request item.', $itemCode),
+                    ]);
+                }
+
                 $itemRequest->items()->whereKey($item['id'])->update([
                     'category_id' => $item['category_id'],
-                    'item_code' => $item['item_code'],
+                    'item_code' => $itemCode,
                     'updated_at' => now(),
                 ]);
             }

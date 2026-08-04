@@ -25,3 +25,5 @@ yarn-error.log
 AGENTS.MD
 /docs/
 .agents
+.claude
+task.md

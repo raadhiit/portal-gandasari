@@ -1,7 +1,7 @@
 <div class="pb-10">
     <div class="max-w-4xl space-y-2">
         <flux:heading size="xl" level="1">{{ __('Create intake request') }}</flux:heading>
-        <flux:text class="text-[#66736D] dark:text-[#9BAAB3]">{{ __('Record item identity and destination. You can review the draft before submitting.') }}</flux:text>
+        <flux:text class="text-[#66736D] dark:text-[#9BAAB3]">{{ __('Record item identity, destination, and attachment. The request will be submitted immediately after save.') }}</flux:text>
     </div>
 
     <form wire:submit="save" class="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
@@ -66,8 +66,22 @@
                 </flux:field>
             </div>
 
+            <div class="rounded-2xl border border-[#DCDAD6] bg-white p-5 shadow-sm dark:border-[#383838] dark:bg-[#1A1C1A]">
+                <div class="mb-4 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#327A7A] dark:text-[#6DB8B3]">
+                    <flux:icon icon="paper-clip" class="size-3.5" />
+                    {{ __('Attachment') }}
+                </div>
+                <flux:field>
+                    <flux:input type="file" wire:model="attachment" accept=".pdf,.jpg,.jpeg,.png,.xlsx,.docx" />
+                    <div wire:loading wire:target="attachment" class="mt-2 text-xs text-[#66736D] dark:text-[#9BAAB3]">
+                        {{ __('Uploading file, please wait...') }}
+                    </div>
+                    <flux:error name="attachment" />
+                </flux:field>
+            </div>
+
             <div class="flex items-center gap-4">
-                <flux:button variant="primary" type="submit" icon="document-check">{{ __('Save as draft') }}</flux:button>
+                <flux:button variant="primary" type="submit" icon="paper-airplane">{{ __('Create and submit') }}</flux:button>
                 <flux:button :href="route('item-requests.index')" wire:navigate variant="ghost">{{ __('Cancel') }}</flux:button>
             </div>
         </div>
@@ -83,7 +97,7 @@
 
                 <div class="space-y-4 px-5 py-5">
                     <flux:text class="text-sm leading-6 text-[#66736D] dark:text-[#9BAAB3]">
-                        Simpan form ini sebagai draft terlebih dahulu. Setelah itu, Anda bisa meninjau data, menambahkan komentar, dan melampirkan file sebelum meneruskannya ke alur persetujuan.
+                        Lengkapi data item dan unggah lampiran sejak awal. Setelah form disimpan, request langsung masuk ke alur persetujuan tanpa tahap draft.
                     </flux:text>
                 </div>
             </div>

@@ -174,53 +174,6 @@
 
                     <div class="space-y-4">
                         <div class="flex items-center justify-between gap-4">
-                            <div class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6B5F8F] dark:text-[#A59ADD]">
-                                <flux:icon icon="chat-bubble-left-right" class="size-3.5" />
-                                {{ __('Comments') }}
-                            </div>
-                            <div class="rounded-full bg-[#EEF2F0] px-2.5 py-0.5 text-xs text-[#66736D] dark:bg-[#222927] dark:text-[#9BAAB3]">
-                                {{ $itemRequest->comments->count() }}
-                            </div>
-                        </div>
-
-                        <div class="space-y-3">
-                            @forelse ($itemRequest->comments as $comment)
-                                <div wire:key="comment-{{ $comment->id }}" class="rounded-xl border border-[#E4DFE8] bg-[#F8F6FA] p-4 dark:border-[#3A3443] dark:bg-[#1E1A23]">
-                                    <div class="flex items-start justify-between gap-4">
-                                        <div>
-                                            <div class="text-sm font-semibold text-[#17201B] dark:text-[#E6E6E4]">{{ $comment->user->name }}</div>
-                                            <div class="mt-0.5 text-xs text-[#66736D] dark:text-[#9BAAB3]">{{ $comment->created_at?->format('d M Y H:i') }}</div>
-                                        </div>
-                                        <flux:icon icon="chat-bubble-left-ellipsis" class="size-4 shrink-0 text-[#8C8C8C] dark:text-[#6F6F6F]" />
-                                    </div>
-                                    <div class="mt-3 text-sm leading-6 text-[#4A4A4A] dark:text-[#C0C0C0]">{{ $comment->body }}</div>
-                                </div>
-                            @empty
-                                <div class="rounded-xl border border-dashed border-[#DCDAD6] bg-[#F4F6F5] px-5 py-8 text-center dark:border-[#34403C] dark:bg-[#121615]">
-                                    <flux:icon icon="chat-bubble-left-right" class="mx-auto size-5 text-[#8C8C8C] dark:text-[#6F6F6F]" />
-                                    <div class="mt-3 text-sm font-medium text-[#17201B] dark:text-[#E6E6E4]">{{ __('No comments yet') }}</div>
-                                    <div class="mt-1 text-sm text-[#66736D] dark:text-[#9BAAB3]">{{ __('Context added here helps the next role process faster.') }}</div>
-                                </div>
-                            @endforelse
-                        </div>
-
-                        @can('item-request.comment')
-                            <form wire:submit="addComment" class="space-y-3 rounded-xl border border-[#E4DFE8] bg-[#F8F6FA] p-4 dark:border-[#3A3443] dark:bg-[#1E1A23]">
-                                <div class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6B5F8F] dark:text-[#A59ADD]">
-                                    <flux:icon icon="pencil-square" class="size-3.5" />
-                                    {{ __('Add note') }}
-                                </div>
-                                <flux:textarea wire:model="commentBody" maxlength="1000" :label="__('Note for team')" />
-                                <flux:error name="commentBody" />
-                                <div class="flex justify-end">
-                                    <flux:button type="submit" wire:loading.attr="disabled" variant="primary" icon="paper-airplane">{{ __('Send comment') }}</flux:button>
-                                </div>
-                            </form>
-                        @endcan
-                    </div>
-
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between gap-4">
                             <div class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#327A7A] dark:text-[#6DB8B3]">
                                 <flux:icon icon="paper-clip" class="size-3.5" />
                                 {{ __('Attachments') }}
@@ -255,22 +208,6 @@
                             @endforelse
                         </div>
 
-                        @can('item-request.attach')
-                            <form wire:submit="uploadAttachment" class="space-y-3 rounded-xl border border-[#D6E3E2] bg-[#F4F9F8] p-4 dark:border-[#30433F] dark:bg-[#1C2624]">
-                                <div class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#327A7A] dark:text-[#6DB8B3]">
-                                    <flux:icon icon="arrow-up-tray" class="size-3.5" />
-                                    {{ __('Upload file') }}
-                                </div>
-                                <flux:input type="file" wire:model="attachment" accept=".pdf,.jpg,.jpeg,.png,.xlsx,.docx" />
-                                <div wire:loading wire:target="attachment" class="text-xs text-[#66736D] dark:text-[#9BAAB3]">
-                                    {{ __('Uploading file, please wait...') }}
-                                </div>
-                                <flux:error name="attachment" />
-                                <div class="flex justify-end">
-                                    <flux:button type="submit" wire:loading.attr="disabled" wire:target="attachment,uploadAttachment" icon="arrow-up-tray">{{ __('Upload file') }}</flux:button>
-                                </div>
-                            </form>
-                        @endcan
                     </div>
 
                     <div class="space-y-4">
