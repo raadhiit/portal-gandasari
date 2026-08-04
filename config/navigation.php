@@ -72,7 +72,7 @@ return [
     ],
     [
         'heading' => 'Administration',
-        'visibility' => ['user.view', 'user.manage'],
+        'visibility' => ['user.view', 'user.manage', 'role.view', 'role.manage'],
         'class' => 'mt-3 [&_h3]:text-[#66736D] dark:[&_h3]:text-[#9BAAB3]',
         'items' => [
             [
@@ -81,6 +81,14 @@ return [
                 'active' => 'admin.users.*',
                 'icon' => 'users',
                 'permission' => 'user.view',
+                'class' => 'rounded-xl text-[#4E5C66] hover:bg-[#EEF2F0] hover:text-[#17201B] data-current:bg-[#EEF2F0] data-current:text-[#4E5C66] dark:text-[#AAB4AF] dark:hover:bg-[#222927] dark:hover:text-[#E6E6E4] dark:data-current:bg-[#222927] dark:data-current:text-[#E6E6E4]',
+            ],
+            [
+                'label' => 'Roles',
+                'route' => 'admin.roles.index',
+                'active' => 'admin.roles.*',
+                'icon' => 'shield-check',
+                'permission' => 'role.view',
                 'class' => 'rounded-xl text-[#4E5C66] hover:bg-[#EEF2F0] hover:text-[#17201B] data-current:bg-[#EEF2F0] data-current:text-[#4E5C66] dark:text-[#AAB4AF] dark:hover:bg-[#222927] dark:hover:text-[#E6E6E4] dark:data-current:bg-[#222927] dark:data-current:text-[#E6E6E4]',
             ],
         ],

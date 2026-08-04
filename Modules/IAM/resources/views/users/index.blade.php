@@ -1,8 +1,13 @@
 <div>
         <flux:heading size="lg">{{ __('Users') }}</flux:heading>
 
-        <div class="mt-4 max-w-sm">
-            <flux:input wire:model.live.debounce="search" placeholder="{{ __('Search name or email') }}" />
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-4">
+            <div class="max-w-sm flex-1">
+                <flux:input wire:model.live.debounce="search" placeholder="{{ __('Search name or email') }}" />
+            </div>
+            @can('create', App\Models\User::class)
+                <flux:button :href="route('admin.users.create')" wire:navigate variant="primary" icon="plus">{{ __('Create user') }}</flux:button>
+            @endcan
         </div>
 
         <div class="relative mt-6 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">

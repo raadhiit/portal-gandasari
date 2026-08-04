@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -26,8 +27,11 @@ class UserIndex extends Component
     {
         $this->authorize('viewAny', User::class);
 
+        $viewer = Auth::user();
+
         $users = User::query()
             ->with('roles')
+            ->when(! $viewer->hasAnyRole(['Admin Portal', 'Superadmin']), fn (Builder $query): Builder => $query->where('department_id', $viewer->department_id))
             ->when($this->search !== '', fn (Builder $query): Builder => $query->where(function (Builder $query): void {
                 $query->where('name', 'like', "%{$this->search}%")
                     ->orWhere('email', 'like', "%{$this->search}%");

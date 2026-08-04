@@ -13,7 +13,7 @@ class UserPolicy
 
     public function view(User $user, User $target): bool
     {
-        if ($user->can('user.manage')) {
+        if ($this->isGlobalUserAdmin($user) || $user->can('user.manage')) {
             return true;
         }
 
@@ -26,16 +26,16 @@ class UserPolicy
 
     public function create(User $user): bool
     {
-        return $user->can('user.manage');
+        return $user->can('user.create') || $user->can('user.manage');
     }
 
     public function update(User $user, User $target): bool
     {
-        if (! $user->can('user.manage')) {
+        if (! $user->can('user.update') && ! $user->can('user.manage')) {
             return false;
         }
 
-        if ($user->id === $target->id) {
+        if ($this->isGlobalUserAdmin($user) || $user->id === $target->id) {
             return true;
         }
 
@@ -44,10 +44,16 @@ class UserPolicy
 
     public function delete(User $user, User $target): bool
     {
-        if (! $user->can('user.manage') || $user->id === $target->id) {
+        if ((! $user->can('user.delete') && ! $user->can('user.manage')) || $user->id === $target->id) {
             return false;
         }
 
-        return $user->department_id !== null && $user->department_id === $target->department_id;
+        return $this->isGlobalUserAdmin($user)
+            || ($user->department_id !== null && $user->department_id === $target->department_id);
+    }
+
+    private function isGlobalUserAdmin(User $user): bool
+    {
+        return $user->hasAnyRole(['Admin Portal', 'Superadmin']);
     }
 }

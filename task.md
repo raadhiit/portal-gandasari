@@ -23,8 +23,10 @@
 
 ## In Progress
 
-- [ ] Approval workflow revisions after accounting/export
-- [ ] Enrich requester-facing approval tracking with deeper metadata (future history/duration integration)
+- [x] Approval workflow revisions after accounting/export
+- [x] Enrich requester-facing approval tracking with deeper metadata (future history/duration integration)
+- [x] Admin User Management: CRUD with granular role/permission mapping
+- [x] Role CRUD with module-based granular permission checklist
 
 ## Next
 

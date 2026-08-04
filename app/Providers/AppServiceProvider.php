@@ -6,6 +6,7 @@ use App\Livewire\ItemRequest\ExportIndex as ItemRequestExportIndex;
 use App\Livewire\NotificationCenter;
 use App\Models\User;
 use App\Observers\UserObserver;
+use App\Policies\RolePolicy;
 use App\Policies\UserPolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
@@ -14,6 +15,10 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Livewire\Livewire;
+use Modules\IAM\Livewire\RoleCreate;
+use Modules\IAM\Livewire\RoleEdit;
+use Modules\IAM\Livewire\RoleIndex;
+use Modules\IAM\Livewire\UserCreate;
 use Modules\IAM\Livewire\UserEdit;
 use Modules\IAM\Livewire\UserIndex;
 use Modules\ItemRequest\Livewire\Create;
@@ -22,6 +27,7 @@ use Modules\ItemRequest\Livewire\Index;
 use Modules\ItemRequest\Livewire\Show;
 use Modules\ItemRequest\Models\ItemRequest;
 use Modules\ItemRequest\Policies\ItemRequestPolicy;
+use Spatie\Permission\Models\Role;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -48,7 +54,11 @@ class AppServiceProvider extends ServiceProvider
         Livewire::component('item-request.inbox', Inbox::class);
         Livewire::component('item-request.export-index', ItemRequestExportIndex::class);
         Livewire::component('iam.user-index', UserIndex::class);
+        Livewire::component('iam.user-create', UserCreate::class);
         Livewire::component('iam.user-edit', UserEdit::class);
+        Livewire::component('iam.role-index', RoleIndex::class);
+        Livewire::component('iam.role-create', RoleCreate::class);
+        Livewire::component('iam.role-edit', RoleEdit::class);
 
         $this->configureDefaults();
     }
@@ -59,6 +69,7 @@ class AppServiceProvider extends ServiceProvider
     protected function configureDefaults(): void
     {
         Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(ItemRequest::class, ItemRequestPolicy::class);
 
         User::observe(UserObserver::class);
