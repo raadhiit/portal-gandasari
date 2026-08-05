@@ -61,6 +61,14 @@ return [
                 'class' => 'rounded-xl text-[#4E5C66] hover:bg-[#E2E8E4] hover:text-[#17201B] data-current:bg-[#EAF4FB] data-current:text-[#3B82F6] dark:text-[#AAB4AF] dark:hover:bg-[#222927] dark:hover:text-[#E6E6E4] dark:data-current:bg-[#1B2A3F] dark:data-current:text-[#7FB0FF]',
             ],
             [
+                'label' => 'IT Inbox',
+                'route' => 'item-requests.it-inbox',
+                'active' => 'item-requests.it-inbox',
+                'icon' => 'server-stack',
+                'permission' => 'item-request.approve',
+                'class' => 'rounded-xl text-[#4E5C66] hover:bg-[#E2E8E4] hover:text-[#17201B] data-current:bg-[#EAF4FB] data-current:text-[#8A6F35] dark:text-[#AAB4AF] dark:hover:bg-[#222927] dark:hover:text-[#E6E6E4] dark:data-current:bg-[#2C2A1E] dark:data-current:text-[#D0B36A]',
+            ],
+            [
                 'label' => 'Export',
                 'route' => 'item-requests.exports.index',
                 'active' => 'item-requests.exports.*',

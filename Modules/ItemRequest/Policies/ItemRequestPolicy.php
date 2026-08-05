@@ -80,7 +80,7 @@ class ItemRequestPolicy
     {
         return $user->can('item-request.approve')
             && $this->inDepartmentScope($user, $itemRequest)
-            && $itemRequest->status === ItemRequestStatus::Accounted;
+            && $itemRequest->status === ItemRequestStatus::WaitingForIT;
     }
 
     public function export(User $user, ItemRequest $itemRequest): bool

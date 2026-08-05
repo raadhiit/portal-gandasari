@@ -22,6 +22,7 @@ use Modules\IAM\Livewire\UserCreate;
 use Modules\IAM\Livewire\UserEdit;
 use Modules\IAM\Livewire\UserIndex;
 use Modules\ItemRequest\Livewire\Create;
+use Modules\ItemRequest\Livewire\ITInbox;
 use Modules\ItemRequest\Livewire\Inbox;
 use Modules\ItemRequest\Livewire\Index;
 use Modules\ItemRequest\Livewire\Show;
@@ -52,6 +53,8 @@ class AppServiceProvider extends ServiceProvider
         Livewire::component('item-request.create', Create::class);
         Livewire::component('item-request.show', Show::class);
         Livewire::component('item-request.inbox', Inbox::class);
+        Livewire::component('item-request.it-inbox', ITInbox::class);
+        Livewire::component('item-request.it-inbox', ITInbox::class);
         Livewire::component('item-request.export-index', ItemRequestExportIndex::class);
         Livewire::component('iam.user-index', UserIndex::class);
         Livewire::component('iam.user-create', UserCreate::class);

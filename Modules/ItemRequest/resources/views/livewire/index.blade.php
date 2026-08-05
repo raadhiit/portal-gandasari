@@ -18,15 +18,12 @@
 
     <div class="flex items-center justify-between gap-4 rounded-2xl border border-[#DCDAD6] bg-white p-4 shadow-sm dark:border-[#383838] dark:bg-[#1A1C1A]">
         <div class="flex flex-1 items-center gap-4">
-            <flux:input wire:model.debounce.300ms="search" placeholder="{{ __('Search by request no or item name') }}" icon="magnifying-glass" class="max-w-sm" />
-            <flux:select wire:model.change="status" class="max-w-xs">
+            <flux:input wire:model.live.debounce.300ms="search" placeholder="{{ __('Search by request no or item name') }}" icon="magnifying-glass" class="max-w-sm" />
+            <flux:select wire:model.live="status" class="max-w-xs">
                 <option value="">-- {{ __('All Status') }} --</option>
-                <option value="draft">Draft</option>
-                <option value="submitted">Submitted</option>
-                <option value="validated">Validated</option>
-                <option value="accounted">Accounted</option>
-                <option value="revised">Revised</option>
-                <option value="rejected">Rejected</option>
+                @foreach (\Modules\ItemRequest\Enums\ItemRequestStatus::cases() as $statusOption)
+                    <option value="{{ $statusOption->value }}">{{ str($statusOption->value)->headline() }}</option>
+                @endforeach
             </flux:select>
         </div>
         <flux:button :href="route('item-requests.create')" wire:navigate icon="plus" variant="primary">{{ __('New Request') }}</flux:button>

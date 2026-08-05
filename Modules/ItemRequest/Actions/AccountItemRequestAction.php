@@ -39,10 +39,9 @@ class AccountItemRequestAction
             }
 
             $itemRequest->forceFill([
-                'status' => ItemRequestStatus::Approved,
-                'current_step' => 'done',
+                'status' => ItemRequestStatus::WaitingForIT,
+                'current_step' => 'it',
                 'accounted_at' => now(),
-                'approved_at' => now(),
             ])->save();
 
             $freshItemRequest = $itemRequest->fresh(['items']);

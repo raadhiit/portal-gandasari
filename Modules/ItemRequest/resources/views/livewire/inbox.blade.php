@@ -1,12 +1,12 @@
 @php
     $inboxConfig = match ($mode) {
-        'accounting' => [
-            'title' => __('Accounting inbox'),
-            'description' => __('Match validated item requests to the correct COA before final approval.'),
-            'icon' => 'banknotes',
-            'accent' => '#5D7A6F',
-            'lane' => __('COA mapping lane'),
-            'action' => __('Assign COA'),
+        'it' => [
+            'title' => __('IT inbox'),
+            'description' => __('Submit Accurate proof to complete validated requests.'),
+            'icon' => 'server-stack',
+            'accent' => '#8A6F35',
+            'lane' => __('IT approval lane'),
+            'action' => __('Submit proof'),
         ],
         default => [
             'title' => __('Validation inbox'),
@@ -25,6 +25,7 @@
         'submitted' => '#E28A12',
         'validated' => '#0E9F6E',
         'accounted' => '#3B82F6',
+        'waiting_for_it' => '#8A6F35',
         'approved' => '#14B8A6',
         'rejected' => '#F43F5E',
         'revised' => '#F97316',

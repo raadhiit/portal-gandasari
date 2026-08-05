@@ -87,6 +87,11 @@ class ItemRequest extends Model
         return $this->hasMany(ItemRequestAttachment::class);
     }
 
+    public function proof(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(ItemRequestProof::class);
+    }
+
     /** @return HasMany<ItemRequestItem, $this> */
     public function items(): HasMany
     {

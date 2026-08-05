@@ -12,9 +12,12 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Modules\ItemRequest\Actions\AccountItemRequestAction;
+use Modules\ItemRequest\Actions\SubmitITProofAction;
 use Modules\ItemRequest\Actions\SubmitItemRequestAction;
 use Modules\ItemRequest\Actions\ValidateItemRequestAction;
 use Modules\ItemRequest\Models\ItemRequest;
+use Modules\ItemRequest\Models\ItemRequestProof;
+
 
 #[Title('Item Request Detail')]
 class Show extends Component
@@ -26,10 +29,12 @@ class Show extends Component
     /** @var array<int, array{id: int, category_id: string, item_code: string, inventory_coa_id: string, sales_coa_id: string}> */
     public array $items = [];
 
+    public string $itProof = '';
+
     public function mount(ItemRequest $itemRequest): void
     {
         $this->authorize('view', $itemRequest);
-        $this->itemRequest = $itemRequest->load('items');
+        $this->itemRequest = $itemRequest->load(['items', 'proof']);
         $this->items = $this->itemRequest->items->map(fn ($item): array => [
             'id' => $item->id,
             'category_id' => (string) ($item->category_id ?? ''),
@@ -61,7 +66,7 @@ class Show extends Component
                         'required',
                         'string',
                         'max:50',
-                        Rule::unique(Item::class, 'item_code'),
+                        Rule::unique('items', 'item_code'),
                         Rule::unique('item_request_items', 'item_code')->ignore($itemId),
                     ],
                 ],
@@ -116,6 +121,21 @@ class Show extends Component
         $this->redirectRoute('item-requests.index');
     }
 
+    public function submitITProof(SubmitITProofAction $action): void
+    {
+        $this->authorize('approve', $this->itemRequest);
+
+        $this->validate(['itProof' => ['required']]);
+
+        /** @var User $user */
+        $user = Auth::user();
+        $this->itemRequest = $action->handle($user, $this->itemRequest, $this->itProof);
+
+        Flux::toast(variant: 'success', text: 'IT proof submitted.');
+
+        $this->redirectRoute('item-requests.index');
+    }
+
     public function submit(SubmitItemRequestAction $action): void
     {
         $this->authorize('submit', $this->itemRequest);
@@ -131,7 +151,7 @@ class Show extends Component
 
     public function render(): View
     {
-        $this->itemRequest->load(['requester', 'histories.actor', 'attachments', 'items']);
+        $this->itemRequest->load(['requester', 'histories.actor', 'attachments', 'items', 'proof']);
 
         return view('item-request::livewire.show')->layout('layouts.app');
     }

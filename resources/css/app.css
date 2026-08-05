@@ -1,5 +1,47 @@
 @import 'tailwindcss';
 @import '../../vendor/livewire/flux/dist/flux.css';
+@import 'trix/dist/trix.css';
+
+/* Trix Editor Overrides */
+trix-toolbar {
+    @apply bg-neutral-50 border-b border-neutral-200 rounded-t-xl dark:bg-[#121615] dark:border-[#34403C];
+}
+
+trix-toolbar .trix-button-group {
+    @apply border-[#DCDAD6] dark:border-[#34403C];
+}
+
+trix-toolbar .trix-button {
+    @apply text-[#4E5C66] border-b-[#E5E5E5] dark:text-[#C0C0C0] dark:border-b-[#34403C];
+}
+
+trix-toolbar .trix-button:not(:first-child) {
+    @apply border-l-[#E5E5E5] dark:border-l-[#34403C];
+}
+
+trix-toolbar .trix-button.trix-active {
+    @apply bg-[#EAF4FB] text-[#2D9CDB] dark:bg-[#2C3B47] dark:text-white;
+}
+
+.dark trix-toolbar .trix-button--icon::before {
+    filter: invert(1);
+}
+
+trix-toolbar .trix-dialog {
+    @apply dark:bg-[#1A1C1A] dark:border-[#34403C];
+}
+
+trix-toolbar .trix-input--dialog {
+    @apply dark:bg-[#222624] dark:text-[#E6E6E4] dark:border-[#34403C];
+}
+
+trix-editor {
+    @apply min-h-[200px] rounded-b-xl border border-neutral-200 p-4 dark:bg-[#171B1A] dark:text-[#E6E6E4] dark:border-[#34403C];
+}
+
+trix-editor:focus {
+    @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+}
 
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';

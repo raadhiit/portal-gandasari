@@ -43,10 +43,12 @@ it('runs item request workflow until approved', function () {
     $requester = User::factory()->create(['department_id' => 1]);
     $validator = User::factory()->create(['department_id' => 1]);
     $accounting = User::factory()->create(['department_id' => 1]);
+    $itUser = User::factory()->create(['department_id' => 1]);
 
     $requester->givePermissionTo(['item-request.create', 'item-request.update-own', 'item-request.submit', 'item-request.view']);
     $validator->givePermissionTo(['item-request.view', 'item-request.validate']);
     $accounting->givePermissionTo(['item-request.view', 'item-request.account']);
+    $itUser->givePermissionTo(['item-request.view', 'item-request.approve']);
 
     $itemRequest = app(CreateItemRequestAction::class)->handle($requester, [
         'business_unit_id' => 1,
@@ -79,9 +81,12 @@ it('runs item request workflow until approved', function () {
         ['id' => $itemRequest->items[0]->id, 'inventory_coa_id' => 1, 'sales_coa_id' => 1],
         ['id' => $itemRequest->items[1]->id, 'inventory_coa_id' => 1, 'sales_coa_id' => 1],
     ]);
+    expect($itemRequest->status)->toBe(ItemRequestStatus::WaitingForIT);
+
+    $itemRequest = app(\Modules\ItemRequest\Actions\SubmitITProofAction::class)->handle($itUser, $itemRequest, 'base64-screenshot');
     expect($itemRequest->status)->toBe(ItemRequestStatus::Approved);
 
-    expect($itemRequest->histories()->count())->toBe(4);
+    expect($itemRequest->histories()->count())->toBe(5);
     Notification::assertSentTo($validator, ItemRequestStatusChangedNotification::class, function (ItemRequestStatusChangedNotification $notification): bool {
         return $notification->status === ItemRequestStatus::Submitted->value;
     });
@@ -91,7 +96,7 @@ it('runs item request workflow until approved', function () {
     Notification::assertSentTo($requester, ItemRequestStatusChangedNotification::class, function (ItemRequestStatusChangedNotification $notification): bool {
         return $notification->status === ItemRequestStatus::Approved->value;
     });
-    expect(DB::table('audit_logs')->where('module', 'item-request')->count())->toBe(3);
+    expect(DB::table('audit_logs')->where('module', 'item-request')->count())->toBe(4);
 });
 
 it('creates, attaches file, and auto submits item request from create form', function () {

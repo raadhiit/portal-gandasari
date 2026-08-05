@@ -9,13 +9,14 @@
         'revised' => ['label' => 'Revised', 'icon' => 'arrow-path', 'tone' => '#F97316'],
     ];
 
-    $current = $statusConfig[$itemRequest->status->value] ?? ['label' => ucfirst($itemRequest->status->value), 'icon' => 'ellipse-stack', 'tone' => '#2D9CDB'];
+    $current = $statusConfig[$itemRequest->status->value] ?? ['label' => ucfirst($itemRequest->status->value), 'icon' => 'ellipsis-horizontal', 'tone' => '#2D9CDB'];
 
     $steps = [
         ['key' => 'draft', 'label' => 'Draft', 'icon' => 'document-text'],
         ['key' => 'submitted', 'label' => 'Validation', 'icon' => 'shield-check'],
         ['key' => 'validated', 'label' => 'Accounting', 'icon' => 'banknotes'],
         ['key' => 'accounted', 'label' => 'Approval', 'icon' => 'check-badge'],
+        ['key' => 'waiting_for_it', 'label' => 'IT Lane', 'icon' => 'server-stack'],
         ['key' => 'approved', 'label' => 'Done', 'icon' => 'sparkles'],
     ];
 
@@ -24,6 +25,7 @@
         'submitted', 'revised' => 'submitted',
         'validated' => 'validated',
         'accounted' => 'accounted',
+        'waiting_for_it' => 'waiting_for_it',
         'approved' => 'approved',
         'rejected' => 'submitted',
         default => 'draft',
@@ -125,48 +127,73 @@
                         @endcan
 
                         @can('account', $itemRequest)
-                            <form wire:submit="accountRequest" class="rounded-xl border border-[#DCDAD6] border-l-4 border-l-[#3B6478] bg-[#F7FAFB] p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] dark:border-[#34403C] dark:border-l-[#6EA3BA] dark:bg-[#1E2427]">
-                                <div class="flex items-start gap-4">
-                                    <div class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-[#3B6478] shadow-sm dark:bg-[#2A3439] dark:text-[#6EA3BA]">
-                                        <flux:icon icon="banknotes" class="size-5" />
-                                    </div>
-                                    <div class="min-w-0 flex-1">
-                                        <div class="text-sm font-semibold text-[#17201B] dark:text-[#E6E6E4]">{{ __('Map item accounts') }}</div>
-                                        <div class="mt-1 text-sm leading-6 text-[#66736D] dark:text-[#9BAAB3]">{{ __('Assign inventory and sales COA for each item. This is the final approval step.') }}</div>
-                                        <div class="mt-4 space-y-4">
-                                            @foreach ($itemRequest->items as $index => $requestItem)
-                                                <div wire:key="account-item-{{ $requestItem->id }}" class="grid gap-3 rounded-xl border border-[#DCDAD6] bg-white p-4 dark:border-[#34403C] dark:bg-[#1A1C1A] md:grid-cols-3">
-                                                    <div>
-                                                        <div class="text-sm font-semibold text-[#17201B] dark:text-[#E6E6E4]">{{ $requestItem->item_name }}</div>
-                                                        <div class="mt-1 text-xs text-[#66736D] dark:text-[#9BAAB3]">{{ $requestItem->item_type }}</div>
-                                                    </div>
-                                                    <div>
-                                                        <flux:select wire:model="items.{{ $index }}.inventory_coa_id" label="{{ __('Inventory COA') }}">
-                                                            <option value="">-- {{ __('Select COA') }} --</option>
-                                                            @foreach (\App\Models\Coa::all() as $coa)
-                                                                <option value="{{ $coa->id }}">{{ $coa->name }}</option>
-                                                            @endforeach
-                                                        </flux:select>
-                                                        <flux:error name="items.{{ $index }}.inventory_coa_id" />
-                                                    </div>
-                                                    <div>
-                                                        <flux:select wire:model="items.{{ $index }}.sales_coa_id" label="{{ __('Sales COA') }}">
-                                                            <option value="">-- {{ __('Select COA') }} --</option>
-                                                            @foreach (\App\Models\Coa::all() as $coa)
-                                                                <option value="{{ $coa->id }}">{{ $coa->name }}</option>
-                                                            @endforeach
-                                                        </flux:select>
-                                                        <flux:error name="items.{{ $index }}.sales_coa_id" />
-                                                    </div>
-                                                </div>
-                                            @endforeach
+                            @if ($itemRequest->status->value === 'validated')
+                                <form wire:submit="accountRequest" class="rounded-xl border border-[#DCDAD6] border-l-4 border-l-[#3B6478] bg-[#F7FAFB] p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] dark:border-[#34403C] dark:border-l-[#6EA3BA] dark:bg-[#1E2427]">
+                                    <div class="flex items-start gap-4">
+                                        <div class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-[#3B6478] shadow-sm dark:bg-[#2A3439] dark:text-[#6EA3BA]">
+                                            <flux:icon icon="banknotes" class="size-5" />
                                         </div>
-                                        <div class="mt-4 flex justify-end">
-                                            <flux:button type="submit" variant="primary" icon="banknotes">{{ __('Account and approve') }}</flux:button>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-sm font-semibold text-[#17201B] dark:text-[#E6E6E4]">{{ __('Map item accounts') }}</div>
+                                            <div class="mt-1 text-sm leading-6 text-[#66736D] dark:text-[#9BAAB3]">{{ __('Assign inventory and sales COA for each item.') }}</div>
+                                            <div class="mt-4 space-y-4">
+                                                @foreach ($itemRequest->items as $index => $requestItem)
+                                                    <div wire:key="account-item-{{ $requestItem->id }}" class="grid gap-3 rounded-xl border border-[#DCDAD6] bg-white p-4 dark:border-[#34403C] dark:bg-[#1A1C1A] md:grid-cols-3">
+                                                        <div>
+                                                            <div class="text-sm font-semibold text-[#17201B] dark:text-[#E6E6E4]">{{ $requestItem->item_name }}</div>
+                                                            <div class="mt-1 text-xs text-[#66736D] dark:text-[#9BAAB3]">{{ $requestItem->item_type }}</div>
+                                                        </div>
+                                                        <div>
+                                                            <flux:select wire:model="items.{{ $index }}.inventory_coa_id" label="{{ __('Inventory COA') }}">
+                                                                <option value="">-- {{ __('Select COA') }} --</option>
+                                                                @foreach (\App\Models\Coa::all() as $coa)
+                                                                    <option value="{{ $coa->id }}">{{ $coa->name }}</option>
+                                                                @endforeach
+                                                            </flux:select>
+                                                            <flux:error name="items.{{ $index }}.inventory_coa_id" />
+                                                        </div>
+                                                        <div>
+                                                            <flux:select wire:model="items.{{ $index }}.sales_coa_id" label="{{ __('Sales COA') }}">
+                                                                <option value="">-- {{ __('Select COA') }} --</option>
+                                                                @foreach (\App\Models\Coa::all() as $coa)
+                                                                    <option value="{{ $coa->id }}">{{ $coa->name }}</option>
+                                                                @endforeach
+                                                            </flux:select>
+                                                            <flux:error name="items.{{ $index }}.sales_coa_id" />
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                            <div class="mt-4 flex justify-end">
+                                                <flux:button type="submit" variant="primary" icon="banknotes">{{ __('Save mapping') }}</flux:button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </form>
+                                </form>
+                            @endif
+                        @endcan
+                        
+                        @can('approve', $itemRequest)
+                            @if ($itemRequest->status === \Modules\ItemRequest\Enums\ItemRequestStatus::WaitingForIT)
+                                <form wire:submit="submitITProof" class="rounded-xl border border-[#DCDAD6] border-l-4 border-l-[#8A6F35] bg-[#F8F6F0] p-5 shadow-[0_4px_14px_rgba(0,0,0,0.04)] dark:border-[#34403C] dark:border-l-[#D0B36A] dark:bg-[#1C1B16]">
+                                    <div class="flex items-start gap-4">
+                                        <div class="flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-[#8A6F35] shadow-sm dark:bg-[#2C2A1E] dark:text-[#D0B36A]">
+                                            <flux:icon icon="server-stack" class="size-5" />
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-sm font-semibold text-[#17201B] dark:text-[#E6E6E4]">{{ __('Submit Accurate Proof') }}</div>
+                                            <div class="mt-4" wire:ignore>
+                                                <input id="itProof" type="hidden" name="itProof" x-ref="trix">
+                                                <trix-editor input="itProof" @trix-change="$wire.set('itProof', $event.target.value)"></trix-editor>
+                                                <flux:error name="itProof" />
+                                            </div>
+                                            <div class="mt-4 flex justify-end">
+                                                <flux:button type="submit" variant="primary" icon="check">{{ __('Approve and finalize') }}</flux:button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            @endif
                         @endcan
 
 

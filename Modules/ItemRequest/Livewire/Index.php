@@ -63,7 +63,14 @@ class Index extends Component
                 'key' => 'approved',
                 'label' => 'Accounting approved',
                 'icon' => 'banknotes',
-                'history' => fn ($history): bool => $history->action === 'approved',
+                'history' => fn ($history): bool => $history->action === 'approved' && $history->from_status === 'accounted',
+                'complete' => fn (ItemRequest $request): bool => in_array($request->status, [ItemRequestStatus::WaitingForIT, ItemRequestStatus::Approved], true),
+            ],
+            [
+                'key' => 'it_approved',
+                'label' => 'IT Approved',
+                'icon' => 'sparkles',
+                'history' => fn ($history): bool => $history->action === 'approved' && $history->from_status === 'waiting_for_it',
                 'complete' => fn (ItemRequest $request): bool => $request->status === ItemRequestStatus::Approved,
             ],
         ];
@@ -104,6 +111,8 @@ class Index extends Component
             ItemRequestStatus::Draft => 'submitted',
             ItemRequestStatus::Submitted => 'validated',
             ItemRequestStatus::Validated => 'approved',
+            ItemRequestStatus::Accounted => 'it_approved',
+            ItemRequestStatus::WaitingForIT => 'it_approved',
             default => 'approved',
         };
     }

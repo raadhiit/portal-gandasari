@@ -10,3 +10,4 @@ Route::get('item-request-exports/{itemRequestExport}/download', ItemRequestExpor
 Route::livewire('item-requests/{itemRequest}', 'item-request.show')->name('item-requests.show');
 Route::livewire('validation-inbox', 'item-request.inbox')->name('item-requests.validation-inbox');
 Route::livewire('accounting-inbox', 'item-request.inbox')->name('item-requests.accounting-inbox');
+Route::livewire('it-inbox', 'item-request.inbox')->name('item-requests.it-inbox');
