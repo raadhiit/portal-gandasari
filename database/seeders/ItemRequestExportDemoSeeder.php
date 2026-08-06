@@ -26,12 +26,11 @@ class ItemRequestExportDemoSeeder extends Seeder
                     'requester_id' => $user->id,
                     'department_id' => 1,
                     'business_unit_id' => 1,
-                    'status' => ItemRequestStatus::Approved,
-                    'current_step' => 'done',
+                    'status' => ItemRequestStatus::WaitingForIT,
+                    'current_step' => 'it',
                     'submitted_at' => now(),
                     'validated_at' => now(),
                     'accounted_at' => now(),
-                    'approved_at' => now(),
                     'notes' => 'Bulk demo request '.$i,
                 ]
             );

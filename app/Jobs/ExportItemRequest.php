@@ -32,7 +32,7 @@ class ExportItemRequest implements ShouldQueue
         $export->update([
             'status' => 'processing',
             'started_at' => now(),
-            'error_message' => null,
+            'error_messagg' => null,
         ]);
 
         $fileName = 'item-import-'.$export->itemRequest->request_no.'-'.$export->id.'.xlsx';

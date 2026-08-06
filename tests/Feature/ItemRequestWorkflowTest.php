@@ -15,6 +15,7 @@ use Modules\ItemRequest\Actions\CreateItemRequestAction;
 use Modules\ItemRequest\Actions\RejectItemRequestAction;
 use Modules\ItemRequest\Actions\ReviseItemRequestAction;
 use Modules\ItemRequest\Actions\SubmitItemRequestAction;
+use Modules\ItemRequest\Actions\SubmitITProofAction;
 use Modules\ItemRequest\Actions\ValidateItemRequestAction;
 use Modules\ItemRequest\Enums\ItemRequestStatus;
 use Modules\ItemRequest\Livewire\Create as CreateItemRequest;
@@ -37,7 +38,7 @@ beforeEach(function () {
     ], ['code'], ['name', 'department_id', 'is_active', 'updated_at']);
 });
 
-it('runs item request workflow until approved', function () {
+it('runs item request workflow until finished', function () {
     Notification::fake();
 
     $requester = User::factory()->create(['department_id' => 1]);
@@ -83,8 +84,8 @@ it('runs item request workflow until approved', function () {
     ]);
     expect($itemRequest->status)->toBe(ItemRequestStatus::WaitingForIT);
 
-    $itemRequest = app(\Modules\ItemRequest\Actions\SubmitITProofAction::class)->handle($itUser, $itemRequest, 'base64-screenshot');
-    expect($itemRequest->status)->toBe(ItemRequestStatus::Approved);
+    $itemRequest = app(SubmitITProofAction::class)->handle($itUser, $itemRequest, 'base64-screenshot');
+    expect($itemRequest->status)->toBe(ItemRequestStatus::Finished);
 
     expect($itemRequest->histories()->count())->toBe(5);
     Notification::assertSentTo($validator, ItemRequestStatusChangedNotification::class, function (ItemRequestStatusChangedNotification $notification): bool {
@@ -94,7 +95,7 @@ it('runs item request workflow until approved', function () {
         return $notification->status === ItemRequestStatus::Validated->value;
     });
     Notification::assertSentTo($requester, ItemRequestStatusChangedNotification::class, function (ItemRequestStatusChangedNotification $notification): bool {
-        return $notification->status === ItemRequestStatus::Approved->value;
+        return $notification->status === ItemRequestStatus::Finished->value;
     });
     expect(DB::table('audit_logs')->where('module', 'item-request')->count())->toBe(4);
 });
@@ -280,7 +281,7 @@ it('shows notification center page', function () {
         'notifiable_id' => $user->id,
         'data' => json_encode([
             'message' => 'REQ-2026-0001 approved',
-            'status' => ItemRequestStatus::Approved->value,
+            'status' => ItemRequestStatus::Finished->value,
             'url' => '/item-requests/1',
         ], JSON_THROW_ON_ERROR),
         'read_at' => null,

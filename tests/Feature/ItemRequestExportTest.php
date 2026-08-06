@@ -37,7 +37,7 @@ it('queues an export from export inbox', function () {
         'business_unit_id' => 1,
         'items' => [['item_name' => 'Test Item', 'item_type' => 'Goods', 'unit_id' => 1]],
     ]);
-    $itemRequest->update(['status' => ItemRequestStatus::Approved, 'approved_at' => now()]);
+    $itemRequest->update(['status' => ItemRequestStatus::WaitingForIT, 'accounted_at' => now()]);
     $itemRequest->items()->update([
         'category_id' => 1,
         'item_code' => 'ITEM-0001',
@@ -70,7 +70,7 @@ it('generates export file with coa mapping and allows authorized download', func
         'business_unit_id' => 1,
         'items' => [['item_name' => 'Test Item', 'item_type' => 'Goods', 'unit_id' => 1]],
     ]);
-    $itemRequest->update(['status' => ItemRequestStatus::Approved, 'approved_at' => now(), 'notes' => 'Catatan export']);
+    $itemRequest->update(['status' => ItemRequestStatus::WaitingForIT, 'accounted_at' => now(), 'notes' => 'Catatan export']);
     $itemRequest->items()->update([
         'category_id' => 1,
         'item_code' => 'ITEM-0001',
@@ -128,7 +128,7 @@ it('forbids download outside department scope', function () {
         'business_unit_id' => 1,
         'items' => [['item_name' => 'Test Item', 'item_type' => 'Goods', 'unit_id' => 1]],
     ]);
-    $itemRequest->update(['status' => ItemRequestStatus::Approved, 'approved_at' => now()]);
+    $itemRequest->update(['status' => ItemRequestStatus::WaitingForIT, 'accounted_at' => now()]);
     $itemRequest->items()->update([
         'category_id' => 1,
         'item_code' => 'ITEM-0001',
@@ -159,12 +159,11 @@ it('renders sidebar navigation from config and paginates ready requests on expor
             'requester_id' => $user->id,
             'department_id' => 1,
             'business_unit_id' => 1,
-            'status' => ItemRequestStatus::Approved,
-            'current_step' => 'done',
+            'status' => ItemRequestStatus::WaitingForIT,
+            'current_step' => 'it',
             'submitted_at' => now()->addMinutes($i),
             'validated_at' => now()->addMinutes($i + 1),
             'accounted_at' => now()->addMinutes($i + 2),
-            'approved_at' => now()->addMinutes($i + 3),
         ]);
 
         ItemRequestItem::create([
@@ -194,4 +193,63 @@ it('renders sidebar navigation from config and paginates ready requests on expor
         ->get(route('item-requests.exports.index', ['readyPage' => 2]))
         ->assertSuccessful()
         ->assertSee('PAGE-001');
+});
+
+it('keeps a request in the queue even after its export file is ready', function () {
+    $requester = User::factory()->create(['department_id' => 1]);
+    $requester->givePermissionTo(['item-request.export']);
+
+    $itemRequest = app(CreateItemRequestAction::class)->handle($requester, [
+        'business_unit_id' => 1,
+        'items' => [['item_name' => 'Queue Item', 'item_type' => 'Goods', 'unit_id' => 1]],
+    ]);
+    $itemRequest->update(['status' => ItemRequestStatus::WaitingForIT, 'accounted_at' => now()]);
+
+    ItemRequestExport::create([
+        'item_request_id' => $itemRequest->id,
+        'requested_by' => $requester->id,
+        'status' => 'ready',
+        'file_name' => 'queue-export.xlsx',
+        'file_path' => 'item-request-exports/queue-export.xlsx',
+        'disk' => 'local',
+        'finished_at' => now(),
+    ]);
+
+    $this->actingAs($requester)
+        ->get(route('item-requests.exports.index'))
+        ->assertSuccessful()
+        ->assertSee('Queue Item')
+        ->assertSee('File ready');
+});
+
+it('removes finalized requests from the active queue and recent files, keeping them in the archive', function () {
+    $requester = User::factory()->create(['department_id' => 1]);
+    $requester->givePermissionTo(['item-request.export']);
+
+    $itemRequest = app(CreateItemRequestAction::class)->handle($requester, [
+        'business_unit_id' => 1,
+        'items' => [['item_name' => 'Finalized Item', 'item_type' => 'Goods', 'unit_id' => 1]],
+    ]);
+    $itemRequest->update(['status' => ItemRequestStatus::Finished, 'accounted_at' => now(), 'approved_at' => now()]);
+
+    ItemRequestExport::create([
+        'item_request_id' => $itemRequest->id,
+        'requested_by' => $requester->id,
+        'status' => 'ready',
+        'file_name' => 'finalized.xlsx',
+        'file_path' => 'item-request-exports/finalized.xlsx',
+        'disk' => 'local',
+        'finished_at' => now(),
+    ]);
+
+    $this->actingAs($requester)
+        ->get(route('item-requests.exports.index'))
+        ->assertSuccessful()
+        ->assertDontSee('Finalized Item');
+
+    Livewire::test(ExportIndex::class)
+        ->set('filter', 'finished')
+        ->assertSuccessful()
+        ->assertSee('Finalized Item')
+        ->assertSee('Download');
 });

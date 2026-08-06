@@ -103,6 +103,32 @@ select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
 }
 
+/* Indeterminate progress bar (transform-only, GPU-safe) */
+.export-bar-shimmer {
+    position: relative;
+    overflow: hidden;
+    background-color: #c58a35;
+    border-radius: 9999px;
+}
+
+.export-bar-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    transform: translateX(-100%);
+    animation: export-shimmer 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+@keyframes export-shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */

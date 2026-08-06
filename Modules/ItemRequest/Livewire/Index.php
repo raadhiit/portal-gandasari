@@ -20,7 +20,7 @@ class Index extends Component
 
     public string $search = '';
 
-    public string $status = '';
+    public string $status = 'submitted';
 
     public function updatedSearch(): void
     {
@@ -50,28 +50,28 @@ class Index extends Component
                 'label' => 'Submitted',
                 'icon' => 'paper-airplane',
                 'history' => fn ($history): bool => $history->action === 'submitted',
-                'complete' => fn (ItemRequest $request): bool => in_array($request->status, [ItemRequestStatus::Submitted, ItemRequestStatus::Validated, ItemRequestStatus::Approved], true),
+                'complete' => fn (ItemRequest $request): bool => in_array($request->status, [ItemRequestStatus::Submitted, ItemRequestStatus::Validated, ItemRequestStatus::WaitingForIT, ItemRequestStatus::Finished], true),
             ],
             [
                 'key' => 'validated',
                 'label' => 'Validated',
                 'icon' => 'shield-check',
                 'history' => fn ($history): bool => $history->action === 'validated',
-                'complete' => fn (ItemRequest $request): bool => in_array($request->status, [ItemRequestStatus::Validated, ItemRequestStatus::Approved], true),
+                'complete' => fn (ItemRequest $request): bool => in_array($request->status, [ItemRequestStatus::Validated, ItemRequestStatus::WaitingForIT, ItemRequestStatus::Finished], true),
             ],
             [
                 'key' => 'approved',
                 'label' => 'Accounting approved',
                 'icon' => 'banknotes',
-                'history' => fn ($history): bool => $history->action === 'approved' && $history->from_status === 'accounted',
-                'complete' => fn (ItemRequest $request): bool => in_array($request->status, [ItemRequestStatus::WaitingForIT, ItemRequestStatus::Approved], true),
+                'history' => fn ($history): bool => $history->action === 'approved' && $history->from_status === 'validated',
+                'complete' => fn (ItemRequest $request): bool => in_array($request->status, [ItemRequestStatus::WaitingForIT, ItemRequestStatus::Finished], true),
             ],
             [
                 'key' => 'it_approved',
-                'label' => 'IT Approved',
+                'label' => 'Finished',
                 'icon' => 'sparkles',
                 'history' => fn ($history): bool => $history->action === 'approved' && $history->from_status === 'waiting_for_it',
-                'complete' => fn (ItemRequest $request): bool => $request->status === ItemRequestStatus::Approved,
+                'complete' => fn (ItemRequest $request): bool => $request->status === ItemRequestStatus::Finished,
             ],
         ];
 
@@ -98,7 +98,8 @@ class Index extends Component
             ItemRequestStatus::Draft => 'Created',
             ItemRequestStatus::Submitted => 'Waiting for validation',
             ItemRequestStatus::Validated => 'Waiting for accounting approval',
-            ItemRequestStatus::Approved => 'Approved',
+            ItemRequestStatus::WaitingForIT => 'Waiting for IT finalization',
+            ItemRequestStatus::Finished => 'Finished',
             ItemRequestStatus::Revised => 'Revised',
             ItemRequestStatus::Rejected => 'Rejected',
             default => str($itemRequest->status->value)->headline()->value(),
@@ -111,7 +112,6 @@ class Index extends Component
             ItemRequestStatus::Draft => 'submitted',
             ItemRequestStatus::Submitted => 'validated',
             ItemRequestStatus::Validated => 'approved',
-            ItemRequestStatus::Accounted => 'it_approved',
             ItemRequestStatus::WaitingForIT => 'it_approved',
             default => 'approved',
         };

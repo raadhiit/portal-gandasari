@@ -51,7 +51,7 @@ class AccountItemRequestAction
                 'actor_id' => $actor->id,
                 'action' => 'approved',
                 'from_status' => $itemRequest->getOriginal('status'),
-                'to_status' => ItemRequestStatus::Approved->value,
+                'to_status' => ItemRequestStatus::WaitingForIT->value,
                 'snapshot' => $freshItemRequest?->toArray(),
             ]);
 

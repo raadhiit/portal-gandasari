@@ -3,8 +3,8 @@
         'draft' => '#66736D',
         'submitted' => '#3B6478',
         'validated' => '#3F7A5F',
-        'accounted' => '#3B6478',
-        'approved' => '#327A7A',
+        'waiting_for_it' => '#8A6F35',
+        'finished' => '#327A7A',
         'rejected' => '#A45151',
         'revised' => '#8A6F35',
     ];

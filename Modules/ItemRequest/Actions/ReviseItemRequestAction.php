@@ -20,7 +20,7 @@ class ReviseItemRequestAction
 
     public function handle(User $actor, ItemRequest $itemRequest, string $remarks): ItemRequest
     {
-        if (! in_array($itemRequest->status, [ItemRequestStatus::Submitted, ItemRequestStatus::Validated, ItemRequestStatus::Accounted], true)) {
+        if (! in_array($itemRequest->status, [ItemRequestStatus::Submitted, ItemRequestStatus::Validated], true)) {
             throw ValidationException::withMessages(['status' => 'Item request tidak bisa direvisi dari status saat ini.']);
         }
 

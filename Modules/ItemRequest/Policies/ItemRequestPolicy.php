@@ -67,8 +67,7 @@ class ItemRequestPolicy
 
     public function reject(User $user, ItemRequest $itemRequest): bool
     {
-        return ($this->validate($user, $itemRequest) || $this->account($user, $itemRequest))
-            || ($user->can('item-request.approve') && $this->inDepartmentScope($user, $itemRequest) && $itemRequest->status === ItemRequestStatus::Accounted);
+        return $this->validate($user, $itemRequest) || $this->account($user, $itemRequest);
     }
 
     public function revise(User $user, ItemRequest $itemRequest): bool
@@ -85,9 +84,11 @@ class ItemRequestPolicy
 
     public function export(User $user, ItemRequest $itemRequest): bool
     {
-        return $user->can('item-request.export')
-            && $this->inDepartmentScope($user, $itemRequest)
-            && $itemRequest->status === ItemRequestStatus::Approved;
+        if (! $user->can('item-request.export') || ! $this->inDepartmentScope($user, $itemRequest)) {
+            return false;
+        }
+
+        return in_array($itemRequest->status, [ItemRequestStatus::WaitingForIT, ItemRequestStatus::Finished], true);
     }
 
     private function inDepartmentScope(User $user, ItemRequest $itemRequest): bool

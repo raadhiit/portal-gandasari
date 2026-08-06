@@ -35,7 +35,7 @@ class SubmitITProofAction
             ]);
 
             $itemRequest->forceFill([
-                'status' => ItemRequestStatus::Approved,
+                'status' => ItemRequestStatus::Finished,
                 'current_step' => 'done',
                 'approved_at' => now(),
             ])->save();
@@ -47,7 +47,7 @@ class SubmitITProofAction
                 'actor_id' => $actor->id,
                 'action' => 'approved',
                 'from_status' => ItemRequestStatus::WaitingForIT->value,
-                'to_status' => ItemRequestStatus::Approved->value,
+                'to_status' => ItemRequestStatus::Finished->value,
                 'remarks' => 'IT Proof submitted and approved.',
                 'snapshot' => $freshItemRequest?->toArray(),
             ]);

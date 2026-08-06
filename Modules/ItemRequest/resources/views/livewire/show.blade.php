@@ -3,8 +3,8 @@
         'draft' => ['label' => 'Draft', 'icon' => 'document-text', 'tone' => '#2D9CDB'],
         'submitted' => ['label' => 'Submitted', 'icon' => 'paper-airplane', 'tone' => '#E28A12'],
         'validated' => ['label' => 'Validated', 'icon' => 'shield-check', 'tone' => '#0E9F6E'],
-        'accounted' => ['label' => 'Accounted', 'icon' => 'banknotes', 'tone' => '#3B82F6'],
-        'approved' => ['label' => 'Approved', 'icon' => 'check-badge', 'tone' => '#14B8A6'],
+        'waiting_for_it' => ['label' => 'Waiting for IT', 'icon' => 'server-stack', 'tone' => '#8A6F35'],
+        'finished' => ['label' => 'Finished', 'icon' => 'check-badge', 'tone' => '#14B8A6'],
         'rejected' => ['label' => 'Rejected', 'icon' => 'x-circle', 'tone' => '#F43F5E'],
         'revised' => ['label' => 'Revised', 'icon' => 'arrow-path', 'tone' => '#F97316'],
     ];
@@ -15,18 +15,16 @@
         ['key' => 'draft', 'label' => 'Draft', 'icon' => 'document-text'],
         ['key' => 'submitted', 'label' => 'Validation', 'icon' => 'shield-check'],
         ['key' => 'validated', 'label' => 'Accounting', 'icon' => 'banknotes'],
-        ['key' => 'accounted', 'label' => 'Approval', 'icon' => 'check-badge'],
         ['key' => 'waiting_for_it', 'label' => 'IT Lane', 'icon' => 'server-stack'],
-        ['key' => 'approved', 'label' => 'Done', 'icon' => 'sparkles'],
+        ['key' => 'finished', 'label' => 'Done', 'icon' => 'sparkles'],
     ];
 
     $currentStepIdx = array_search(match ($itemRequest->status->value) {
         'draft' => 'draft',
         'submitted', 'revised' => 'submitted',
         'validated' => 'validated',
-        'accounted' => 'accounted',
         'waiting_for_it' => 'waiting_for_it',
-        'approved' => 'approved',
+        'finished' => 'finished',
         'rejected' => 'submitted',
         default => 'draft',
     }, array_column($steps, 'key'), true);

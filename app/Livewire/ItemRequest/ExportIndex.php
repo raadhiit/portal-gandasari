@@ -20,6 +20,18 @@ class ExportIndex extends Component
     use AuthorizesRequests;
     use WithPagination;
 
+    public string $filter = 'waiting_for_it';
+
+    public function updatedFilter(): void
+    {
+        $this->resetPage('readyPage');
+    }
+
+    public function setFilter(string $filter): void
+    {
+        $this->filter = $filter;
+    }
+
     public function queueExport(int $itemRequestId): void
     {
         $itemRequest = ItemRequest::query()->findOrFail($itemRequestId);
@@ -53,9 +65,9 @@ class ExportIndex extends Component
         $readyRequests = ItemRequest::query()
             ->with(['requester', 'items', 'exports' => fn ($query) => $query->latest()])
             ->withCount('items')
-            ->where('status', ItemRequestStatus::Approved)
-            ->whereDoesntHave('exports', fn ($query) => $query->whereIn('status', ['queued', 'processing', 'ready']))
-            ->latest('approved_at')
+            ->when($this->filter === 'waiting_for_it', fn ($query) => $query->where('status', ItemRequestStatus::WaitingForIT))
+            ->when($this->filter === 'finished', fn ($query) => $query->where('status', ItemRequestStatus::Finished))
+            ->latest('accounted_at')
             ->paginate(10, pageName: 'readyPage');
 
         $processingExports = ItemRequestExport::query()
@@ -67,12 +79,14 @@ class ExportIndex extends Component
         $completedExports = ItemRequestExport::query()
             ->with(['itemRequest.items', 'requester'])
             ->where('status', 'ready')
+            ->whereHas('itemRequest', fn ($query) => $query->where('status', ItemRequestStatus::WaitingForIT))
             ->latest('finished_at')
             ->paginate(10, pageName: 'completedPage');
 
         $failedExports = ItemRequestExport::query()
             ->with(['itemRequest.items', 'requester'])
             ->where('status', 'failed')
+            ->whereHas('itemRequest', fn ($query) => $query->where('status', ItemRequestStatus::WaitingForIT))
             ->latest('finished_at')
             ->get();
 

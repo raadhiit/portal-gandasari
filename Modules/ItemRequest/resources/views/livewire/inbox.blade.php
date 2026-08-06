@@ -24,9 +24,8 @@
         'draft' => '#2D9CDB',
         'submitted' => '#E28A12',
         'validated' => '#0E9F6E',
-        'accounted' => '#3B82F6',
         'waiting_for_it' => '#8A6F35',
-        'approved' => '#14B8A6',
+        'finished' => '#14B8A6',
         'rejected' => '#F43F5E',
         'revised' => '#F97316',
     ];

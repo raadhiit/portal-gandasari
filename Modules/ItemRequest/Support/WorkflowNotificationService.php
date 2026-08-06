@@ -56,7 +56,7 @@ class WorkflowNotificationService
         $this->sendToUsers(
             collect([$itemRequest->requester])->filter(),
             $itemRequest,
-            ItemRequestStatus::Approved->value,
+            ItemRequestStatus::Finished->value,
             sprintf('%s approved', $itemRequest->request_no)
         );
     }
